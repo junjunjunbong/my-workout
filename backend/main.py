@@ -21,9 +21,25 @@ try:
         UserProfileResponse,
         UserProfileUpdateRequest,
     )
-    from backend.services.user_service import create_user, authenticate_user, get_user_by_email
+    from backend.services.user_service import (
+        create_user,
+        authenticate_user,
+        get_user_by_email,
+        get_user_profile,
+        update_user_profile,
+    )
     from backend.services.auth_service import create_access_token, auth_dependency
-    from backend.services.social_service import record_activity
+    from backend.services.social_service import (
+        record_activity,
+        follow_user,
+        unfollow_user,
+        get_feed as get_social_feed,
+        like_item,
+        unlike_item,
+        create_comment,
+        get_comments,
+        delete_comment,
+    )
     from backend.services.analytics_service import pr_trend, muscle_volume_by_category, exercise_detail
     from backend.services.coach_service import recommend as coach_recommend
 except ImportError:
@@ -38,9 +54,25 @@ except ImportError:
         UserProfileResponse,
         UserProfileUpdateRequest,
     )
-    from services.user_service import create_user, authenticate_user, get_user_by_email
+    from services.user_service import (
+        create_user,
+        authenticate_user,
+        get_user_by_email,
+        get_user_profile,
+        update_user_profile,
+    )
     from services.auth_service import create_access_token, auth_dependency
-    from services.social_service import record_activity
+    from services.social_service import (
+        record_activity,
+        follow_user,
+        unfollow_user,
+        get_feed as get_social_feed,
+        like_item,
+        unlike_item,
+        create_comment,
+        get_comments,
+        delete_comment,
+    )
     from services.analytics_service import pr_trend, muscle_volume_by_category, exercise_detail
     from services.coach_service import recommend as coach_recommend
 
@@ -62,7 +94,15 @@ MODEL = os.getenv("OPENAI_MODEL", "deepseek/deepseek-chat-v3-0324:free")
 SITE_TITLE = os.getenv("SITE_TITLE", "My Workout Tracker")
 SITE_REFERER = os.getenv("SITE_REFERER", "https://localhost:3001")
 
-client = OpenAI(base_url=OPENAI_BASE_URL, api_key=OPENAI_API_KEY)
+client = None
+
+def get_openai_client():
+    global client
+    if client is None:
+        if not OPENAI_API_KEY:
+            raise HTTPException(status_code=500, detail="OPENAI_API_KEY is not set")
+        client = OpenAI(base_url=OPENAI_BASE_URL, api_key=OPENAI_API_KEY)
+    return client
 
 # Services (legacy removed)
 # from services.ai_service import generate_today_routine
@@ -146,7 +186,7 @@ def add_workout(workout: WorkoutCreateModel):
         "exercise": workout.exercise,
         "type": workout.type,
         "sets": norm_sets,
-        "cardio": workout.cardio.dict() if workout.cardio else None,
+        "cardio": workout.cardio.model_dump() if workout.cardio else None,
         "notes": workout.notes,
     }
     
@@ -180,7 +220,7 @@ def add_routine(routine: RoutineCreateModel):
         "id": str(uuid.uuid4()),
         "name": routine.name,
         "memo": routine.memo,
-        "items": [item.dict() for item in routine.items],
+        "items": [item.model_dump() for item in routine.items],
     }
     routines.append(new_routine)
     write_json("routines", routines)
@@ -264,9 +304,8 @@ PROMPT_CHAT = (
 )
 
 def call_openai(messages: list[dict], json_only: bool = False) -> str:
-    if not OPENAI_API_KEY:
-        raise HTTPException(status_code=500, detail="OPENAI_API_KEY is not set")
     try:
+        openai_client = get_openai_client()
         kwargs = {
             "model": MODEL,
             "messages": messages,
@@ -278,9 +317,12 @@ def call_openai(messages: list[dict], json_only: bool = False) -> str:
         }
         if json_only:
             kwargs["response_format"] = {"type": "json_object"}
-        completion = client.chat.completions.create(**kwargs)
+        completion = openai_client.chat.completions.create(**kwargs)
         return completion.choices[0].message.content
     except Exception as e:
+        # Catching the specific HTTPException from get_openai_client
+        if isinstance(e, HTTPException):
+            raise e
         raise HTTPException(status_code=502, detail=f"AI error: {e}")
 
 @app.post("/api/ai/today-routine")
@@ -375,50 +417,19 @@ async def register_user(user_data: UserRegisterRequest):
 @app.get("/api/users/me", response_model=UserProfileResponse)
 async def get_me(payload: dict = Depends(auth_dependency)):
     user_id = int(payload.get("sub"))
-    import sqlite3
-    from services.user_service import DB_PATH as _DB_PATH
-    with sqlite3.connect(_DB_PATH) as conn:
-        cur = conn.execute("SELECT id, email, avatar_url, bio, goal FROM users WHERE id = ?", (user_id,))
-        row = cur.fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="User not found")
-        return {"id": row[0], "email": row[1], "avatar_url": row[2], "bio": row[3], "goal": row[4]}
+    profile = get_user_profile(user_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="User not found")
+    return profile
 
 @app.patch("/api/users/me", response_model=UserProfileResponse)
 async def update_me(update: UserProfileUpdateRequest, payload: dict = Depends(auth_dependency)):
     user_id = int(payload.get("sub"))
-    import sqlite3
-    from services.user_service import DB_PATH as _DB_PATH
-    fields = []
-    values = []
-    if update.avatar_url is not None:
-        fields.append("avatar_url = ?")
-        values.append(update.avatar_url)
-    if update.bio is not None:
-        fields.append("bio = ?")
-        values.append(update.bio)
-    if update.goal is not None:
-        fields.append("goal = ?")
-        values.append(update.goal)
-    if not fields:
-        # No changes; return current profile
-        with sqlite3.connect(_DB_PATH) as conn:
-            cur = conn.execute("SELECT id, email, avatar_url, bio, goal FROM users WHERE id = ?", (user_id,))
-            row = cur.fetchone()
-            if not row:
-                raise HTTPException(status_code=404, detail="User not found")
-            return {"id": row[0], "email": row[1], "avatar_url": row[2], "bio": row[3], "goal": row[4]}
-    values.append(user_id)
-    with sqlite3.connect(_DB_PATH) as conn:
-        sql = f"UPDATE users SET {', '.join(fields)}, updated_at=CURRENT_TIMESTAMP WHERE id = ?"
-        conn.execute(sql, tuple(values))
-        conn.commit()
-        cur = conn.execute("SELECT id, email, avatar_url, bio, goal FROM users WHERE id = ?", (user_id,))
-        row = cur.fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="User not found")
-        return {"id": row[0], "email": row[1], "avatar_url": row[2], "bio": row[3], "goal": row[4]}
-    # End profile update
+    # The `update_user_profile` service handles the logic of checking for fields
+    updated_profile = update_user_profile(user_id, update.model_dump())
+    if not updated_profile:
+        raise HTTPException(status_code=404, detail="User not found")
+    return updated_profile
 
 # -----------------
 # Social (Follow & Feed)
@@ -427,97 +438,24 @@ async def update_me(update: UserProfileUpdateRequest, payload: dict = Depends(au
 class FollowRequest(BaseModel):
     user_id: int
 
-
 @app.post("/api/social/follow", status_code=status.HTTP_201_CREATED)
-async def follow_user(req: FollowRequest, payload: dict = Depends(auth_dependency)):
+async def follow_user_endpoint(req: FollowRequest, payload: dict = Depends(auth_dependency)):
     follower_id = int(payload.get("sub"))
-    followee_id = int(req.user_id)
-    if follower_id == followee_id:
-        raise HTTPException(status_code=400, detail="Cannot follow yourself")
-    import sqlite3
-    from services.user_service import DB_PATH as _DB_PATH
-    with sqlite3.connect(_DB_PATH) as conn:
-        # verify followee exists
-        row = conn.execute("SELECT id FROM users WHERE id = ?", (followee_id,)).fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="Target user not found")
-        try:
-            conn.execute(
-                "INSERT INTO follows (follower_id, followee_id) VALUES (?, ?)",
-                (follower_id, followee_id),
-            )
-            conn.commit()
-        except sqlite3.IntegrityError:
-            # unique constraint violation
-            raise HTTPException(status_code=409, detail="Already following")
+    followee_id = req.user_id
+    follow_user(follower_id, followee_id)
     return {"success": True}
 
-
 @app.delete("/api/social/follow", status_code=status.HTTP_204_NO_CONTENT)
-async def unfollow_user(req: FollowRequest, payload: dict = Depends(auth_dependency)):
+async def unfollow_user_endpoint(req: FollowRequest, payload: dict = Depends(auth_dependency)):
     follower_id = int(payload.get("sub"))
-    followee_id = int(req.user_id)
-    import sqlite3
-    from services.user_service import DB_PATH as _DB_PATH
-    with sqlite3.connect(_DB_PATH) as conn:
-        cur = conn.execute(
-            "DELETE FROM follows WHERE follower_id = ? AND followee_id = ?",
-            (follower_id, followee_id),
-        )
-        conn.commit()
-        if cur.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Not following")
+    followee_id = req.user_id
+    unfollow_user(follower_id, followee_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-
 @app.get("/api/social/feed")
-async def get_feed(limit: int = 20, cursor: Optional[str] = None, payload: dict = Depends(auth_dependency)):
-    """
-    Return activities for users the requester follows, ordered by created_at desc, id desc.
-    Cursor format: "{created_at_iso}|{id}". Limit is capped at 50.
-    """
-    import sqlite3
-    from services.user_service import DB_PATH as _DB_PATH
-
+async def get_feed_endpoint(limit: int = 20, cursor: Optional[str] = None, payload: dict = Depends(auth_dependency)):
     user_id = int(payload.get("sub"))
-    if limit <= 0:
-        limit = 20
-    limit = min(limit, 50)
-
-    cursor_ts = None
-    cursor_id = None
-    if cursor:
-        try:
-            parts = cursor.split("|")
-            if len(parts) != 2:
-                raise ValueError()
-            cursor_ts, cursor_id = parts[0], int(parts[1])
-        except Exception:
-            raise HTTPException(status_code=400, detail="Invalid cursor")
-
-    with sqlite3.connect(_DB_PATH) as conn:
-        params = [user_id]
-        sql = (
-            "SELECT a.id, a.user_id, a.type, a.ref_id, a.created_at "
-            "FROM activities a "
-            "WHERE a.user_id IN (SELECT followee_id FROM follows WHERE follower_id = ?) "
-        )
-        if cursor_ts is not None:
-            sql += "AND (a.created_at < ? OR (a.created_at = ? AND a.id < ?)) "
-            params.extend([cursor_ts, cursor_ts, cursor_id])
-        sql += "ORDER BY a.created_at DESC, a.id DESC LIMIT ?"
-        params.append(limit)
-        rows = conn.execute(sql, tuple(params)).fetchall()
-
-    items = [
-        {"id": r[0], "user_id": r[1], "type": r[2], "ref_id": r[3], "created_at": r[4]}
-        for r in rows
-    ]
-    next_cursor = None
-    if len(items) == limit:
-        last = items[-1]
-        next_cursor = f"{last['created_at']}|{last['id']}"
-    return {"items": items, "nextCursor": next_cursor}
+    return get_social_feed(user_id, limit, cursor)
 
 # -----------------
 # Likes & Comments
@@ -526,101 +464,35 @@ async def get_feed(limit: int = 20, cursor: Optional[str] = None, payload: dict 
 class LikeRequest(BaseModel):
     ref_id: str
 
-
 @app.post("/api/social/like", status_code=status.HTTP_201_CREATED)
-async def like_item(req: LikeRequest, payload: dict = Depends(auth_dependency)):
-    if not req.ref_id or not req.ref_id.strip():
-        raise HTTPException(status_code=400, detail="ref_id required")
+async def like_item_endpoint(req: LikeRequest, payload: dict = Depends(auth_dependency)):
     user_id = int(payload.get("sub"))
-    import sqlite3
-    from services.user_service import DB_PATH as _DB_PATH
-    with sqlite3.connect(_DB_PATH) as conn:
-        try:
-            conn.execute("INSERT INTO likes (user_id, ref_id) VALUES (?,?)", (user_id, req.ref_id))
-            conn.commit()
-        except sqlite3.IntegrityError:
-            raise HTTPException(status_code=409, detail="Already liked")
+    like_item(user_id, req.ref_id)
     return {"success": True}
 
-
 @app.delete("/api/social/like", status_code=status.HTTP_204_NO_CONTENT)
-async def unlike_item(req: LikeRequest, payload: dict = Depends(auth_dependency)):
+async def unlike_item_endpoint(req: LikeRequest, payload: dict = Depends(auth_dependency)):
     user_id = int(payload.get("sub"))
-    import sqlite3
-    from services.user_service import DB_PATH as _DB_PATH
-    with sqlite3.connect(_DB_PATH) as conn:
-        cur = conn.execute("DELETE FROM likes WHERE user_id = ? AND ref_id = ?", (user_id, req.ref_id))
-        conn.commit()
-        if cur.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Like not found")
+    unlike_item(user_id, req.ref_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
-
 
 class CommentCreateRequest(BaseModel):
     ref_id: str
     content: str
 
-
 @app.post("/api/social/comment", status_code=status.HTTP_201_CREATED)
-async def create_comment(req: CommentCreateRequest, payload: dict = Depends(auth_dependency)):
-    if not req.ref_id or not req.ref_id.strip():
-        raise HTTPException(status_code=400, detail="ref_id required")
-    content = (req.content or "").strip()
-    if not content:
-        raise HTTPException(status_code=400, detail="content required")
-    if len(content) > 500:
-        raise HTTPException(status_code=400, detail="content too long")
+async def create_comment_endpoint(req: CommentCreateRequest, payload: dict = Depends(auth_dependency)):
     user_id = int(payload.get("sub"))
-    import sqlite3
-    from services.user_service import DB_PATH as _DB_PATH
-    with sqlite3.connect(_DB_PATH) as conn:
-        cur = conn.execute(
-            "INSERT INTO comments (user_id, ref_id, content) VALUES (?,?,?)",
-            (user_id, req.ref_id, content),
-        )
-        conn.commit()
-        cid = cur.lastrowid
-        row = conn.execute(
-            "SELECT id, user_id, ref_id, content, created_at FROM comments WHERE id = ?",
-            (cid,),
-        ).fetchone()
-    return {
-        "id": row[0],
-        "user_id": row[1],
-        "ref_id": row[2],
-        "content": row[3],
-        "created_at": row[4],
-    }
-
+    new_comment = create_comment(user_id, req.ref_id, req.content)
+    return new_comment
 
 @app.get("/api/social/comments")
-async def list_comments(ref_id: str, payload: dict = Depends(auth_dependency)):
-    if not ref_id or not ref_id.strip():
-        raise HTTPException(status_code=400, detail="ref_id required")
-    import sqlite3
-    from services.user_service import DB_PATH as _DB_PATH
-    with sqlite3.connect(_DB_PATH) as conn:
-        rows = conn.execute(
-            "SELECT id, user_id, ref_id, content, created_at FROM comments WHERE ref_id = ? ORDER BY created_at ASC, id ASC",
-            (ref_id,),
-        ).fetchall()
-    return [
-        {"id": r[0], "user_id": r[1], "ref_id": r[2], "content": r[3], "created_at": r[4]}
-        for r in rows
-    ]
-
+async def list_comments_endpoint(ref_id: str, payload: dict = Depends(auth_dependency)):
+    # The auth dependency is kept to ensure the user is logged in, even if user_id isn't used directly
+    return get_comments(ref_id)
 
 @app.delete("/api/social/comment/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_comment(comment_id: int, payload: dict = Depends(auth_dependency)):
+async def delete_comment_endpoint(comment_id: int, payload: dict = Depends(auth_dependency)):
     user_id = int(payload.get("sub"))
-    import sqlite3
-    from services.user_service import DB_PATH as _DB_PATH
-    with sqlite3.connect(_DB_PATH) as conn:
-        cur = conn.execute(
-            "DELETE FROM comments WHERE id = ? AND user_id = ?",
-            (comment_id, user_id),
-        )
-        conn.commit()
-        if cur.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Comment not found")
+    delete_comment(comment_id, user_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

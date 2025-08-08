@@ -151,3 +151,46 @@ def authenticate_user(email: str, password: str) -> Optional[dict]:
         user.pop("password_hash")
         return user
     return None
+
+def get_user_profile(user_id: int) -> Optional[dict]:
+    """
+    Get user profile by user ID.
+    """
+    with get_db_connection() as conn:
+        row = conn.execute(
+            "SELECT id, email, avatar_url, bio, goal FROM users WHERE id = ?",
+            (user_id,)
+        ).fetchone()
+        if not row:
+            return None
+        return dict(row)
+
+def update_user_profile(user_id: int, update_data: dict) -> Optional[dict]:
+    """
+    Update user profile.
+    """
+    fields = []
+    values = []
+
+    # Dynamically build the query based on provided data
+    if "avatar_url" in update_data and update_data["avatar_url"] is not None:
+        fields.append("avatar_url = ?")
+        values.append(update_data["avatar_url"])
+    if "bio" in update_data and update_data["bio"] is not None:
+        fields.append("bio = ?")
+        values.append(update_data["bio"])
+    if "goal" in update_data and update_data["goal"] is not None:
+        fields.append("goal = ?")
+        values.append(update_data["goal"])
+
+    if not fields:
+        return get_user_profile(user_id)
+
+    values.append(user_id)
+
+    with get_db_connection() as conn:
+        sql = f"UPDATE users SET {', '.join(fields)}, updated_at=CURRENT_TIMESTAMP WHERE id = ?"
+        conn.execute(sql, tuple(values))
+        conn.commit()
+
+    return get_user_profile(user_id)
