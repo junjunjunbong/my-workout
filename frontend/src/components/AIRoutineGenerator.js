@@ -14,7 +14,7 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import { addRoutine, getRoutines, getWorkouts } from '../services/api';
+import { addRoutine, getWorkouts } from '../services/api';
 import { createTodayAIRoutine } from '../services/todayAiService';
 
 const AIRoutineGenerator = () => {
@@ -22,7 +22,6 @@ const AIRoutineGenerator = () => {
   const [experience, setExperience] = useState('초보자');
   const [availableEquipment, setAvailableEquipment] = useState(['덤벨', '바벨', '머신']);
   const [workoutFrequency, setWorkoutFrequency] = useState(3);
-  const [workoutHistory, setWorkoutHistory] = useState([]);
   const [generatedRoutine, setGeneratedRoutine] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -32,11 +31,6 @@ const AIRoutineGenerator = () => {
   useEffect(() => {
     // In a real app, we would fetch actual workout history
     // For now, we'll use mock data
-    setWorkoutHistory([
-      { exercise: '벤치프레스', weight: 60, date: '2025-07-01' },
-      { exercise: '스쿼트', weight: 80, date: '2025-07-02' },
-      { exercise: '랫풀다운', weight: 70, date: '2025-07-03' }
-    ]);
   }, []);
 
   const handleGenerate = async () => {

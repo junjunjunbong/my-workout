@@ -1,5 +1,5 @@
-import api from './api';
+import { apiClient } from './api';
 
-export const getRoutines = () => api.get('/routines');
-export const addRoutine = (routine) => api.post('/routines', routine);
-export const deleteRoutine = (id) => api.delete(`/routines/${id}`);
+export const getRoutines = () => apiClient.get('/routines');
+export const addRoutine = (routine) => apiClient.post('/routines', routine);
+export const deleteRoutine = (id) => apiClient.delete(`/routines/${id}`);

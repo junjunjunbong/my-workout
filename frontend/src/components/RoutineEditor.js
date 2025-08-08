@@ -19,11 +19,10 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Chip,
   Alert,
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
-import { getRoutines, addRoutine, deleteRoutine } from '../services/routineService';
+import { addRoutine } from '../services/routineService';
 import { getConfig } from '../services/api';
 
 const RoutineEditor = ({ routine, onSave, onCancel }) => {

@@ -1,3 +1,40 @@
+# Python caches and virtualenvs
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Environments & secrets
+.env
+venv/
+.venv/
+
+# Taskmaster (exclude from repo)
+.taskmaster/
+
+# Editors/OS
+.DS_Store
+.idea/
+.vscode/
+
+# Node/Build outputs (if any frontend parts later)
+node_modules/
+dist/
+build/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Misc cache
+.cache/
+*.log
 # OS
 .DS_Store
 Thumbs.db

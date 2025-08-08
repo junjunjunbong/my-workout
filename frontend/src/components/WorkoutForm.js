@@ -21,9 +21,8 @@ import {
   Chip
 } from '@mui/material';
 import { Add, Remove } from '@mui/icons-material';
-import { format, parseISO } from 'date-fns';
-import { ko } from 'date-fns/locale';
-import { addWorkout, getConfig, getLastWorkoutForExercise, getWorkouts } from '../services/api';
+import { format } from 'date-fns';
+import { addWorkout, getConfig, getLastWorkoutForExercise } from '../services/api';
 import AIAssistant from './AIAssistant';
 
 const WorkoutForm = () => {

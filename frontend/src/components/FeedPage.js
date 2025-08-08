@@ -3,7 +3,6 @@ import { Paper, TextField, Button, Typography, Alert, Stack, List, ListItem, Lis
 import { followUser, unfollowUser, getFeed } from '../services/api';
 
 export default function FeedPage() {
-  const [token, setToken] = useState('');
   const [targetId, setTargetId] = useState('2');
   const [items, setItems] = useState([]);
   const [error, setError] = useState('');
@@ -11,7 +10,7 @@ export default function FeedPage() {
   const follow = async () => {
     setError('');
     try {
-      await followUser(token, Number(targetId));
+      await followUser(Number(targetId));
       alert('Followed');
     } catch (e) {
       setError(e.response?.data?.detail || e.message);
@@ -20,7 +19,7 @@ export default function FeedPage() {
   const unfollow = async () => {
     setError('');
     try {
-      await unfollowUser(token, Number(targetId));
+      await unfollowUser(Number(targetId));
       alert('Unfollowed');
     } catch (e) {
       setError(e.response?.data?.detail || e.message);
@@ -29,7 +28,7 @@ export default function FeedPage() {
   const load = async () => {
     setError('');
     try {
-      const res = await getFeed(token);
+      const res = await getFeed();
       setItems(res.data.items || []);
     } catch (e) {
       setError(e.response?.data?.detail || e.message);
@@ -41,7 +40,6 @@ export default function FeedPage() {
       <Typography variant="h6" sx={{ mb: 2 }}>Feed Demo</Typography>
       <Stack spacing={1}>
         {error && <Alert severity="error">{error}</Alert>}
-        <TextField label="Bearer Token" value={token} onChange={(e)=>setToken(e.target.value)} fullWidth />
         <TextField label="Target User ID" value={targetId} onChange={(e)=>setTargetId(e.target.value)} />
         <Stack direction="row" spacing={1}>
           <Button variant="outlined" onClick={follow}>Follow</Button>

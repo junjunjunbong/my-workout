@@ -5,12 +5,10 @@ import {
   Typography,
   Card,
   CardContent,
-  CardActions,
   Button,
   List,
   ListItem,
   ListItemText,
-  Divider,
   CircularProgress,
   Alert,
   Box,
@@ -35,7 +33,7 @@ import {
   eachDayOfInterval
 } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { getWorkouts, deleteWorkout, getConfig } from '../services/api';
+import { getWorkouts, deleteWorkout } from '../services/api';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import AddIcon from '@mui/icons-material/Add';
@@ -43,7 +41,6 @@ import AddIcon from '@mui/icons-material/Add';
 const CalendarDashboard = () => {
   const navigate = useNavigate();
   const [workouts, setWorkouts] = useState([]);
-  const [config, setConfig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -54,12 +51,8 @@ const CalendarDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [workoutsRes, configRes] = await Promise.all([
-          getWorkouts(),
-          getConfig()
-        ]);
+        const workoutsRes = await getWorkouts();
         setWorkouts(workoutsRes.data);
-        setConfig(configRes.data);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -268,7 +261,6 @@ const CalendarDashboard = () => {
             variant="outlined"
             size="small"
             disabled={aiLoading}
-            sx={{ minWidth: 118, py: 0.5, px: 1.25, borderRadius: 2 }}
             onClick={async () => {
               try {
                 setAiError('');
