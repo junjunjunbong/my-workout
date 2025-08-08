@@ -90,7 +90,7 @@ load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
-MODEL = os.getenv("OPENAI_MODEL", "deepseek/deepseek-chat-v3-0324:free")
+MODEL = os.getenv("OPENAI_MODEL", "openai/gpt-oss-20b:free")
 SITE_TITLE = os.getenv("SITE_TITLE", "My Workout Tracker")
 SITE_REFERER = os.getenv("SITE_REFERER", "https://localhost:3001")
 
