@@ -30,7 +30,7 @@ export const logout = () => {
 export const getWorkouts = () => apiClient.get('/workouts');
 export const addWorkout = (workout) => apiClient.post('/workouts', workout);
 export const deleteWorkout = (workoutId) => apiClient.delete(`/workouts/${workoutId}`);
-export const getLastWorkoutForExercise = (exercise) => apiClient.get(`/workouts/last?exercise=${exercise}`);
+export const getLastWorkoutForExercise = (exercise) => apiClient.get(`/workouts/exercise/${exercise}/last`);
 
 export const getRoutines = () => apiClient.get('/routines');
 export const addRoutine = (routine) => apiClient.post('/routines', routine);
@@ -40,9 +40,9 @@ export const getConfig = () => apiClient.get('/config');
 
 export const getCoachRecommendations = (days) => apiClient.get(`/coach/recommendations?days=${days}`);
 
-export const getFeed = () => apiClient.get('/feed');
-export const followUser = (userId) => apiClient.post(`/users/${userId}/follow`);
-export const unfollowUser = (userId) => apiClient.post(`/users/${userId}/unfollow`);
+export const getFeed = (cursor) => apiClient.get('/social/feed', { params: { cursor } });
+export const followUser = (userId) => apiClient.post('/social/follow', { user_id: userId });
+export const unfollowUser = (userId) => apiClient.delete('/social/follow', { data: { user_id: userId } });
 
 export const getWeeklyVolume = () => apiClient.get('/analytics/weekly-volume');
 export const getMonthlyVolume = () => apiClient.get('/analytics/monthly-volume');
