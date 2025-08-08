@@ -47,7 +47,7 @@ const WorkoutForm = () => {
     notes: routineFromState?.name ? `루틴: ${routineFromState.name}` : ''
   });
   
-  const [exercises, setExercises] = useState([]);
+  const [exercises, setExercises] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -60,7 +60,7 @@ const WorkoutForm = () => {
       try {
         const res = await getConfig();
         setConfig(res.data);
-        setExercises(res.data.exercises);
+        setExercises(res.data.exercises || {});
         
         // If a routine was applied, set the first exercise
         if (routineFromState && routineFromState.items.length > 0) {
@@ -366,7 +366,7 @@ const WorkoutForm = () => {
                     value={formData.category}
                     onChange={handleCategoryChange}
                   >
-                    {config.categories.map(category => (
+                    {(config.categories || []).map(category => (
                       <MenuItem key={category} value={category}>{category}</MenuItem>
                     ))}
                   </Select>
