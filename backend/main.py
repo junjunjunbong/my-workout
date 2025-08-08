@@ -8,18 +8,41 @@ import json
 import os
 from pathlib import Path
 
-from storage import read_json, write_json, append_workouts
-
-# Import user schemas
-from schemas.user_schemas import UserRegisterRequest, UserRegisterResponse, UserLoginRequest, UserLoginResponse
-from schemas.user_profile_schemas import UserProfileResponse, UserProfileUpdateRequest
-
-# Import user service functions directly
-from services.user_service import create_user, authenticate_user, get_user_by_email
-from services.auth_service import create_access_token, auth_dependency
-from services.social_service import record_activity
-from services.analytics_service import pr_trend, muscle_volume_by_category, exercise_detail
-from services.coach_service import recommend as coach_recommend
+# Prefer package-qualified imports when running as backend.main; fall back for test context
+try:
+    from backend.storage import read_json, write_json, append_workouts
+    from backend.schemas.user_schemas import (
+        UserRegisterRequest,
+        UserRegisterResponse,
+        UserLoginRequest,
+        UserLoginResponse,
+    )
+    from backend.schemas.user_profile_schemas import (
+        UserProfileResponse,
+        UserProfileUpdateRequest,
+    )
+    from backend.services.user_service import create_user, authenticate_user, get_user_by_email
+    from backend.services.auth_service import create_access_token, auth_dependency
+    from backend.services.social_service import record_activity
+    from backend.services.analytics_service import pr_trend, muscle_volume_by_category, exercise_detail
+    from backend.services.coach_service import recommend as coach_recommend
+except ImportError:
+    from storage import read_json, write_json, append_workouts
+    from schemas.user_schemas import (
+        UserRegisterRequest,
+        UserRegisterResponse,
+        UserLoginRequest,
+        UserLoginResponse,
+    )
+    from schemas.user_profile_schemas import (
+        UserProfileResponse,
+        UserProfileUpdateRequest,
+    )
+    from services.user_service import create_user, authenticate_user, get_user_by_email
+    from services.auth_service import create_access_token, auth_dependency
+    from services.social_service import record_activity
+    from services.analytics_service import pr_trend, muscle_volume_by_category, exercise_detail
+    from services.coach_service import recommend as coach_recommend
 
 app = FastAPI(title="My Workout API")
 
@@ -81,6 +104,10 @@ class RoutineCreateModel(BaseModel):
     name: str
     memo: Optional[str] = None
     items: List[RoutineItemModel] = []
+
+class ActivityCreateModel(BaseModel):
+    type: str
+    ref_id: Optional[str] = None
 
 # API Routes
 
@@ -199,6 +226,15 @@ def get_coach_recommendations(days: int = 30):
     if days < 7 or days > 180:
         raise HTTPException(status_code=400, detail="days must be in [7, 180]")
     return coach_recommend(days)
+
+@app.post("/api/social/activity", status_code=status.HTTP_201_CREATED)
+def create_activity(act: ActivityCreateModel, payload: dict = Depends(auth_dependency)):
+    """Create a simple activity row for feed demos/tests."""
+    user_id = int(payload.get("sub"))
+    if not act.type or not act.type.strip():
+        raise HTTPException(status_code=400, detail="type required")
+    new_id = record_activity(user_id=user_id, activity_type=act.type.strip(), ref_id=(act.ref_id or None))
+    return {"id": new_id}
 
 @app.get("/api/calendar-summary/{target_date}")
 def get_calendar_summary(target_date: str):

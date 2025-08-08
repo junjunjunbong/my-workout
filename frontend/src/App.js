@@ -8,6 +8,9 @@ import RoutineManager from './components/RoutineManager';
 import AIRoutineGenerator from './components/AIRoutineGenerator';
 import Analytics from './components/Analytics';
 import Navigation from './components/Navigation';
+import AuthPage from './components/AuthPage';
+import FeedPage from './components/FeedPage';
+import CoachPage from './components/CoachPage';
 
 let theme = createTheme({
   palette: {
@@ -46,6 +49,9 @@ function App() {
             <Route path="/routines" element={<RoutineManager />} />
             <Route path="/ai-routines" element={<AIRoutineGenerator />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/feed" element={<FeedPage />} />
+            <Route path="/coach" element={<CoachPage />} />
           </Routes>
         </Container>
       </Router>

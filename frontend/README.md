@@ -2,6 +2,10 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+Environment variable:
+
+- `REACT_APP_API_BASE` (default: `http://localhost:8000/api`)
+
 ## Available Scripts
 
 In the project directory, you can run:

@@ -38,6 +38,12 @@ npm install
 npm start           # http://localhost:3000
 ```
 
+### 3) Quick demo pages
+
+- Auth: `/auth` – register/login, copy token for Swagger
+- Feed: `/feed` – paste token, follow/unfollow, load feed
+- Coach: `/coach` – rule‑based recommendations, AI today routine/chat
+
 ## API Overview (Selected)
 
 - Auth: `POST /api/auth/register`, `POST /api/auth/login`
@@ -47,6 +53,7 @@ npm start           # http://localhost:3000
 - Analytics: `GET /api/analytics/pr-trend`, `GET /api/analytics/muscle-volume-range`,
   `GET /api/analytics/exercise-detail`
 - AI Coach: `GET /api/coach/recommendations?days=30`
+ - Record Activity (demo): `POST /api/social/activity {type, ref_id?}`
 
 ## Testing
 
@@ -58,7 +65,7 @@ python -m unittest discover -s backend -p "test_*.py"
 ## Docker (optional)
 
 ```
-docker compose up --build
+docker compose up -d --build
 ```
 
 ## Notes
@@ -67,3 +74,27 @@ docker compose up --build
 - Workouts analytics data: JSON (`backend/storage.py`) — tests override the data dir
 - Cursor‑based feed pagination is supported
 - Recommendations are rule‑based; no external AI calls required
+
+## Seed & Demo Accounts
+
+```
+# After DB init
+python scripts/seed.py
+```
+
+- Demo accounts: `demo1@example.com`, `demo2@example.com`
+- Default password: `Demo1234!`
+- Get JWT: POST `/api/auth/login`
+
+## Env configuration
+
+- Backend: see `backend/.env.example` (set `OPENAI_API_KEY` for AI chat endpoints)
+- Frontend: set `REACT_APP_API_BASE` (default `http://localhost:8000/api`)
+
+## Local run (no Docker) in 3 commands
+
+```
+python -m venv .venv && . .venv/Scripts/Activate.ps1 && pip install -r requirements.txt
+python backend/init_db.py && python scripts/seed.py
+python run.py
+```
