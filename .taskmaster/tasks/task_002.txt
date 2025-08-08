@@ -1,0 +1,80 @@
+# Task ID: 2
+# Title: 사용자 인증 및 프로필 시스템 구축
+# Status: done
+# Dependencies: 1
+# Priority: high
+# Description: 이메일/비밀번호 및 소셜 로그인(Google, Kakao)을 포함한 회원가입, 로그인, 프로필 관리 시스템을 구현합니다.
+# Details:
+비밀번호는 해싱하여 저장하고, 인증에는 JWT를 사용합니다. 사용자는 프로필 페이지에서 사진, 자기소개, 운동 목표를 설정할 수 있어야 합니다.
+
+# Test Strategy:
+회원가입, 로그인, 로그아웃, 프로필 수정 등 전체 인증 플로우를 테스트합니다. JWT 토큰의 생성, 검증, 만료 처리를 확인하고, 보안 취약점을 점검합니다.
+
+# Subtasks:
+## 1. Design and Implement User Authentication Database Schema [done]
+### Dependencies: None
+### Description: Create the necessary database tables and columns to store user information, including credentials and profile data.
+### Details:
+Create a 'users' table with columns: id (primary key), email (unique, indexed), password_hash (string), created_at (timestamp), and updated_at (timestamp). Use a database migration tool to script and apply the schema changes.
+<info added on 2025-08-08T00:09:58.143Z>
+Implementation is complete. The `users` table has been created in SQLite. The final schema includes the required columns (`id`, `email`, `password_hash`, `created_at`, `updated_at`) and adds profile fields: `avatar_url`, `bio`, and `goal`. These changes were managed via two migration scripts (`001_create_users_table.py`, `002_add_user_profile_fields.py`) and a `MigrationManager`. The implementation is verified by 15 passing unit tests (`test_user_migration.py`) covering schema integrity and constraints. A seeding script (`003_seed_from_json.py`) was also created for initial data.
+</info added on 2025-08-08T00:09:58.143Z>
+
+## 2. Implement JWT Generation and Validation Service [done]
+### Dependencies: None
+### Description: Create a reusable service or module for generating and validating JSON Web Tokens (JWTs) for stateless authentication.
+### Details:
+The service should have two primary functions: one to generate a token containing the user ID and an expiration date, and another to validate an incoming token. Use a well-vetted library like 'jsonwebtoken' for Node.js or 'PyJWT' for Python. Store the JWT secret key securely in environment variables.
+<info added on 2025-08-08T00:10:16.843Z>
+**Implementation Summary:**
+The JWT generation and validation service has been implemented and is located at `backend/services/auth_service.py`.
+
+- **Core Functions:** `create_access_token(subject, extra_claims=None, expires_minutes=None)` for token generation, `verify_token(token)` for validation, and a reusable `auth_dependency` using `HTTPBearer`.
+- **Configuration:** The service is configured using the environment variables `JWT_SECRET`, `JWT_ALG`, and `JWT_EXPIRES_MINUTES`.
+- **Integration:** The `create_access_token` function is used in the `/api/auth/login` endpoint within `main.py`, and the `auth_dependency` is applied to protect routes.
+- **Verification:** Tests located in `backend/test_auth_login.py` have passed. These tests validate the login process, access to protected routes, and the correct handling of expired or invalid tokens.
+</info added on 2025-08-08T00:10:16.843Z>
+
+## 3. Develop User Registration API Endpoint [done]
+### Dependencies: None
+### Description: Create a public API endpoint (e.g., POST /api/auth/register) that allows new users to create an account.
+### Details:
+The endpoint should accept an email and password. It must validate the input (e.g., valid email format, strong password policy), hash the password using bcrypt, and store the new user in the database. Return a 201 Created status on success.
+<info added on 2025-08-08T00:10:31.662Z>
+Implementation Summary:
+- Endpoint: `POST /api/auth/register` has been implemented in `backend/main.py`.
+- Service Logic: The endpoint utilizes `services.user_service.create_user` for business logic, including hashing the password and handling duplicate user checks (returning a 409 Conflict status).
+- Validation: Input is validated using the Pydantic `UserRegisterRequest` schema (`backend/schemas/user_schemas.py`), which contains specific validators for email format and password strength.
+- Testing: A comprehensive test suite has been created in `backend/test_user_registration.py`. It covers the success case, duplicate registration attempts, invalid email formats, weak passwords, and requests with missing fields.
+- Status: All tests for the endpoint, validation, and duplicate handling have passed.
+</info added on 2025-08-08T00:10:31.662Z>
+
+## 4. Develop User Login API Endpoint [done]
+### Dependencies: None
+### Description: Create a public API endpoint (e.g., POST /api/auth/login) for users to authenticate and receive a JWT.
+### Details:
+The endpoint should accept an email and password. It will find the user by email, compare the provided password against the stored hash using bcrypt's compare function, and if valid, generate a JWT using the service from subtask 2. The JWT should be returned in the response body.
+<info added on 2025-08-08T00:10:57.810Z>
+Implementation completed in `backend/main.py` with the endpoint `POST /api/auth/login`. The endpoint authenticates users via `services.user_service.authenticate_user`, issues a JWT with `create_access_token`, and returns a `UserLoginResponse` containing the token. Tests in `backend/test_auth_login.py` cover success, wrong password, and non-existent user cases.
+
+검증: 로그인 성공/실패 케이스 및 토큰 발급 동작 확인.
+</info added on 2025-08-08T00:10:57.810Z>
+
+## 5. Create Authentication Middleware for Protected Routes [done]
+### Dependencies: None
+### Description: Implement middleware that intercepts requests to protected routes, validates the JWT, and attaches user information to the request object.
+### Details:
+The middleware should extract the JWT from the 'Authorization: Bearer <token>' header. It will use the JWT validation service to verify the token. If valid, it attaches the decoded user payload (e.g., user ID) to the request and passes control to the next handler. If invalid or missing, it returns a 401 Unauthorized response.
+<info added on 2025-08-08T00:11:13.706Z>
+Implementation is complete. The authentication logic was implemented as a FastAPI dependency named `auth_dependency` located in `backend/services/auth_service.py`. This dependency is now used to protect the `/api/protected/ping`, `/api/users/me` (GET), and `/api/users/me` (PATCH) endpoints. Unit tests have been added to `backend/test_auth_login.py` to confirm that requests without a token or with an invalid token correctly receive a 401 Unauthorized response, while requests with a valid token are processed successfully.
+</info added on 2025-08-08T00:11:13.706Z>
+
+## 6. Implement a Protected 'Get User Profile' Endpoint [done]
+### Dependencies: None
+### Description: Create a sample protected API endpoint (e.g., GET /api/users/me) that uses the authentication middleware to return the current user's data.
+### Details:
+This endpoint will demonstrate the end-to-end authentication flow. It should be protected by the middleware created in subtask 5. It will use the user ID from the request object (attached by the middleware) to fetch the user's profile information (excluding the password hash) from the database and return it.
+<info added on 2025-08-08T00:11:33.334Z>
+Implementation complete. Protected endpoints have been added to `backend/main.py`. The `GET /api/users/me` endpoint, protected by `auth_dependency`, fetches the current user's profile data (`id`, `email`, `avatar_url`, `bio`, `goal`). A `PATCH /api/users/me` endpoint was also added to allow profile updates. Supporting schemas are located in `backend/schemas/user_profile_schemas.py`. Tests covering both profile retrieval and updates (`backend/test_user_me.py`, `backend/test_user_profile.py`) have passed.
+</info added on 2025-08-08T00:11:33.334Z>
+

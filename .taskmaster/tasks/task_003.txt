@@ -1,0 +1,14 @@
+# Task ID: 3
+# Title: 기존 데이터 마이그레이션 스크립트 개발
+# Status: done
+# Dependencies: 1
+# Priority: high
+# Description: 기존 workouts.json 및 routines.json 파일의 데이터를 새로운 RDBMS 스키마로 이전하는 일회성 스크립트를 작성합니다.
+# Details:
+데이터 손실이나 변환 오류 없이 모든 기존 사용자 데이터를 새 데이터베이스 구조에 정확하게 매핑하고 삽입해야 합니다.
+<info added on 2025-08-08T00:16:00.375Z>
+`backend/migrations/003_seed_from_json.py`에 일회성 마이그레이션 스크립트를 구현하여 `workouts.json`과 `routines.json`의 데이터를 RDBMS 테이블(`workouts`, `workout_sets`, `routines`, `routine_items`)로 이전 완료. `workout_sets`의 `weight_kg`와 `reps`는 숫자형으로 정규화되었으며, `routine_items`의 `reps`는 텍스트로 유지됩니다. `backend/test_seed_from_json.py` 테스트를 통해 마이그레이션된 데이터의 개수를 검증하여 정합성 테스트를 통과했습니다.
+</info added on 2025-08-08T00:16:00.375Z>
+
+# Test Strategy:
+스크립트 실행 전후의 데이터 정합성을 비교 검증합니다. 원본 데이터의 개수와 마이그레이션된 데이터의 개수가 일치하는지 확인합니다.

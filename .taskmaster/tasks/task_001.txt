@@ -1,0 +1,73 @@
+# Task ID: 1
+# Title: 데이터베이스 시스템 마이그레이션 (RDBMS 전환)
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: 기존 JSON 파일 기반 저장소를 다중 사용자 지원을 위한 관계형 데이터베이스(예: PostgreSQL)로 전환합니다.
+# Details:
+사용자, 운동 기록, 루틴, 운동 종류를 관리하기 위한 데이터베이스 스키마를 설계하고 구현합니다. 데이터 무결성, 일관성 및 확장성을 보장해야 합니다.
+
+# Test Strategy:
+데이터베이스 스키마의 유효성을 검증하고, CRUD 작업에 대한 단위 및 통합 테스트를 수행합니다. 초기 부하 테스트를 통해 성능을 검증합니다.
+
+# Subtasks:
+## 1. Design and Implement User Database Schema [done]
+### Dependencies: None
+### Description: Create the necessary database table(s) to store user information, including a unique identifier, email, a hashed password, and timestamps.
+### Details:
+Use a migration tool to create a 'users' table. The table should include columns: 'id' (primary key, auto-incrementing), 'email' (unique, indexed), 'password_hash' (string, length 255), 'created_at' (timestamp), and 'updated_at' (timestamp).
+<info added on 2025-08-05T13:39:13.889Z>
+데이터베이스 마이그레이션 시스템이 성공적으로 구현되었습니다. 
+
+완료된 내용:
+1. 데이터베이스 마이그레이션 시스템 생성 - 마이그레이션 매니저와 함께 완전한 마이그레이션 프레임워크 구축
+2. 첫 번째 마이그레이션으로 사용자 테이블 생성:
+   - id (primary key, auto-incrementing)
+   - email (unique, indexed, not null) 
+   - password_hash (not null)
+   - created_at (timestamp with default)
+   - updated_at (timestamp with default)
+3. 마이그레이션이 성공적으로 실행되는지 검증 완료
+4. 단위 테스트 추가하여 마이그레이션 동작 확인
+5. README 문서에 데이터베이스 설정 과정 추가
+6. 데이터베이스와 테이블이 올바르게 생성되었는지 확인 완료
+
+사용자 정보 저장을 위한 기본 데이터베이스 인프라가 완성되어 다중 사용자 기능을 지원할 준비가 되었습니다.
+</info added on 2025-08-05T13:39:13.889Z>
+
+## 2. Create User Registration API Endpoint [done]
+### Dependencies: None
+### Description: Develop a public API endpoint (e.g., POST /api/auth/register) that allows new users to create an account by providing their email and password.
+### Details:
+The endpoint must validate input: check for a valid email format and ensure the password meets complexity requirements. Hash the password using a strong algorithm like bcrypt before saving. Return a 201 status code on success. Handle the case where the email already exists with a 409 Conflict error.
+<info added on 2025-08-05T14:50:10.522Z>
+**구현 완료 보고**
+
+완료된 내용:
+1.  `main.py`에 사용자 회원가입 API 엔드포인트 구현 (POST /api/auth/register)
+2.  `schemas.py`와 `main.py`의 문법 오류 및 import 문제 해결
+3.  중복 이메일 등록 시 에러 코드를 409 Conflict로 수정
+4.  Windows 환경의 파일 잠금으로 인한 테스트 정리 문제 해결
+5.  회원가입 엔드포인트에 대한 종합적인 테스트를 생성하여 모든 테스트 통과를 확인함
+
+모든 요구사항(이메일/비밀번호 유효성 검증, bcrypt 해싱, 201/409 상태 코드 반환)이 충족되었으며, 구현이 올바르게 작동함을 확인함.
+</info added on 2025-08-05T14:50:10.522Z>
+
+## 3. Create User Login API Endpoint and Issue JWT [done]
+### Dependencies: None
+### Description: Develop a public API endpoint (e.g., POST /api/auth/login) for users to authenticate and receive a JSON Web Token (JWT).
+### Details:
+The endpoint accepts 'email' and 'password'. It finds the user by email and compares the provided password with the stored hash. On success, generate a signed JWT containing the user's ID and an expiration claim. Return the JWT. On failure, return a generic 401 Unauthorized error.
+
+## 4. Develop Authentication Middleware for Protected Routes [done]
+### Dependencies: None
+### Description: Create a middleware function that verifies the JWT from the Authorization header to protect specific API routes.
+### Details:
+The middleware should extract the JWT from the 'Authorization: Bearer <token>' header. It must verify the token's signature and check for expiration. If valid, attach the user's identity to the request object for downstream use. If invalid, it must respond with a 401 Unauthorized error.
+
+## 5. Implement a Protected 'Get User Profile' Endpoint [done]
+### Dependencies: None
+### Description: Create a new API endpoint (e.g., GET /api/users/me) that is protected by the authentication middleware and returns the current user's profile information.
+### Details:
+This endpoint should use the authentication middleware created in the previous task. It will use the user identity attached to the request object by the middleware to fetch the corresponding user's data from the database. The returned data should not include sensitive information like the password hash.
+

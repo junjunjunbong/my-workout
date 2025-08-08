@@ -1,0 +1,42 @@
+# Task ID: 7
+# Title: 고급 분석 대시보드 (운동별 상세 분석)
+# Status: pending
+# Dependencies: 6
+# Priority: low
+# Description: 특정 운동에 대한 볼륨(세트 x 반복 x 중량) 및 중량 변화 추이를 기간별로 조회하고 시각화하는 기능을 개발합니다.
+# Details:
+사용자가 운동과 기간을 선택하여 상세 데이터를 분석할 수 있는 인터페이스를 제공하고, Recharts를 사용하여 관련 데이터를 차트로 시각화합니다.
+
+# Test Strategy:
+운동 볼륨 계산 로직의 정확성을 단위 테스트로 검증합니다. 운동 및 기간 선택 필터가 올바르게 동작하는지 통합 테스트를 통해 확인합니다.
+
+# Subtasks:
+## 1. Backend service & endpoint for exercise detail [pending]
+### Dependencies: None
+### Description: Return per-exercise series with optional date range: volumeByDate (sum weight*reps per date), topWeightTrend (max weight per date).
+### Details:
+- Implement in services.analytics_service or new services/exercise_service.py
+- Endpoint: GET /api/analytics/exercise-detail?exercise=&start=&end=
+- Use storage.read_json('workouts'); sort results by date asc; ISO date strings
+
+## 2. Backend tests for exercise detail [pending]
+### Dependencies: None
+### Description: Tests for filtering by exercise and date range; ignores other exercises.
+### Details:
+- Add backend/test_exercise_detail.py
+- Seed storage.DATA_DIR with workouts.json and assert shapes and sorting
+
+## 3. Frontend service stub [pending]
+### Dependencies: None
+### Description: Add getExerciseDetail(exercise,start,end) to frontend/src/services/api.js.
+### Details:
+- Simple GET wrapper for /api/analytics/exercise-detail
+
+## 4. Docs & assumptions for exercise detail [pending]
+### Dependencies: None
+### Description: Note formulas and assumptions for volume and weight series.
+### Details:
+- Volume per date: sum over sets of weight*reps for matching exercise/date
+- Top weight per date: max weight among sets for matching exercise/date
+- Sorting: ascending by date; ISO strings
+

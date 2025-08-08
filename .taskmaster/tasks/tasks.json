@@ -1,0 +1,505 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "데이터베이스 시스템 마이그레이션 (RDBMS 전환)",
+        "description": "기존 JSON 파일 기반 저장소를 다중 사용자 지원을 위한 관계형 데이터베이스(예: PostgreSQL)로 전환합니다.",
+        "details": "사용자, 운동 기록, 루틴, 운동 종류를 관리하기 위한 데이터베이스 스키마를 설계하고 구현합니다. 데이터 무결성, 일관성 및 확장성을 보장해야 합니다.",
+        "testStrategy": "데이터베이스 스키마의 유효성을 검증하고, CRUD 작업에 대한 단위 및 통합 테스트를 수행합니다. 초기 부하 테스트를 통해 성능을 검증합니다.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design and Implement User Database Schema",
+            "description": "Create the necessary database table(s) to store user information, including a unique identifier, email, a hashed password, and timestamps.",
+            "dependencies": [],
+            "details": "Use a migration tool to create a 'users' table. The table should include columns: 'id' (primary key, auto-incrementing), 'email' (unique, indexed), 'password_hash' (string, length 255), 'created_at' (timestamp), and 'updated_at' (timestamp).\n<info added on 2025-08-05T13:39:13.889Z>\n데이터베이스 마이그레이션 시스템이 성공적으로 구현되었습니다. \n\n완료된 내용:\n1. 데이터베이스 마이그레이션 시스템 생성 - 마이그레이션 매니저와 함께 완전한 마이그레이션 프레임워크 구축\n2. 첫 번째 마이그레이션으로 사용자 테이블 생성:\n   - id (primary key, auto-incrementing)\n   - email (unique, indexed, not null) \n   - password_hash (not null)\n   - created_at (timestamp with default)\n   - updated_at (timestamp with default)\n3. 마이그레이션이 성공적으로 실행되는지 검증 완료\n4. 단위 테스트 추가하여 마이그레이션 동작 확인\n5. README 문서에 데이터베이스 설정 과정 추가\n6. 데이터베이스와 테이블이 올바르게 생성되었는지 확인 완료\n\n사용자 정보 저장을 위한 기본 데이터베이스 인프라가 완성되어 다중 사용자 기능을 지원할 준비가 되었습니다.\n</info added on 2025-08-05T13:39:13.889Z>",
+            "status": "done",
+            "testStrategy": "Verify the migration runs successfully up and down. Manually inspect the database schema to confirm all columns, types, and constraints are correct. Write a unit test to connect to a test database and confirm the table exists."
+          },
+          {
+            "id": 2,
+            "title": "Create User Registration API Endpoint",
+            "description": "Develop a public API endpoint (e.g., POST /api/auth/register) that allows new users to create an account by providing their email and password.",
+            "dependencies": [],
+            "details": "The endpoint must validate input: check for a valid email format and ensure the password meets complexity requirements. Hash the password using a strong algorithm like bcrypt before saving. Return a 201 status code on success. Handle the case where the email already exists with a 409 Conflict error.\n<info added on 2025-08-05T14:50:10.522Z>\n**구현 완료 보고**\n\n완료된 내용:\n1.  `main.py`에 사용자 회원가입 API 엔드포인트 구현 (POST /api/auth/register)\n2.  `schemas.py`와 `main.py`의 문법 오류 및 import 문제 해결\n3.  중복 이메일 등록 시 에러 코드를 409 Conflict로 수정\n4.  Windows 환경의 파일 잠금으로 인한 테스트 정리 문제 해결\n5.  회원가입 엔드포인트에 대한 종합적인 테스트를 생성하여 모든 테스트 통과를 확인함\n\n모든 요구사항(이메일/비밀번호 유효성 검증, bcrypt 해싱, 201/409 상태 코드 반환)이 충족되었으며, 구현이 올바르게 작동함을 확인함.\n</info added on 2025-08-05T14:50:10.522Z>",
+            "status": "done",
+            "testStrategy": "Write integration tests for the success case with valid data, ensuring a new user is created and the password is hashed. Test failure cases: invalid email, weak password, duplicate email, and missing fields."
+          },
+          {
+            "id": 3,
+            "title": "Create User Login API Endpoint and Issue JWT",
+            "description": "Develop a public API endpoint (e.g., POST /api/auth/login) for users to authenticate and receive a JSON Web Token (JWT).",
+            "dependencies": [],
+            "details": "The endpoint accepts 'email' and 'password'. It finds the user by email and compares the provided password with the stored hash. On success, generate a signed JWT containing the user's ID and an expiration claim. Return the JWT. On failure, return a generic 401 Unauthorized error.",
+            "status": "done",
+            "testStrategy": "Integration tests for successful login, asserting a valid JWT is returned. Test failure cases like incorrect password or non-existent user, ensuring a 401 error is returned without revealing which was the cause."
+          },
+          {
+            "id": 4,
+            "title": "Develop Authentication Middleware for Protected Routes",
+            "description": "Create a middleware function that verifies the JWT from the Authorization header to protect specific API routes.",
+            "dependencies": [],
+            "details": "The middleware should extract the JWT from the 'Authorization: Bearer <token>' header. It must verify the token's signature and check for expiration. If valid, attach the user's identity to the request object for downstream use. If invalid, it must respond with a 401 Unauthorized error.",
+            "status": "done",
+            "testStrategy": "Create a test protected endpoint. Write integration tests to confirm access is granted with a valid token and denied with no token, an invalid token, or an expired token, returning the correct HTTP status codes."
+          },
+          {
+            "id": 5,
+            "title": "Implement a Protected 'Get User Profile' Endpoint",
+            "description": "Create a new API endpoint (e.g., GET /api/users/me) that is protected by the authentication middleware and returns the current user's profile information.",
+            "dependencies": [],
+            "details": "This endpoint should use the authentication middleware created in the previous task. It will use the user identity attached to the request object by the middleware to fetch the corresponding user's data from the database. The returned data should not include sensitive information like the password hash.",
+            "status": "done",
+            "testStrategy": "Write an integration test that calls this endpoint with a valid JWT and asserts that the correct user data (e.g., id, email) is returned. Verify that the password hash is not present in the response."
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "사용자 인증 및 프로필 시스템 구축",
+        "description": "이메일/비밀번호 및 소셜 로그인(Google, Kakao)을 포함한 회원가입, 로그인, 프로필 관리 시스템을 구현합니다.",
+        "details": "비밀번호는 해싱하여 저장하고, 인증에는 JWT를 사용합니다. 사용자는 프로필 페이지에서 사진, 자기소개, 운동 목표를 설정할 수 있어야 합니다.",
+        "testStrategy": "회원가입, 로그인, 로그아웃, 프로필 수정 등 전체 인증 플로우를 테스트합니다. JWT 토큰의 생성, 검증, 만료 처리를 확인하고, 보안 취약점을 점검합니다.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design and Implement User Authentication Database Schema",
+            "description": "Create the necessary database tables and columns to store user information, including credentials and profile data.",
+            "dependencies": [],
+            "details": "Create a 'users' table with columns: id (primary key), email (unique, indexed), password_hash (string), created_at (timestamp), and updated_at (timestamp). Use a database migration tool to script and apply the schema changes.\n<info added on 2025-08-08T00:09:58.143Z>\nImplementation is complete. The `users` table has been created in SQLite. The final schema includes the required columns (`id`, `email`, `password_hash`, `created_at`, `updated_at`) and adds profile fields: `avatar_url`, `bio`, and `goal`. These changes were managed via two migration scripts (`001_create_users_table.py`, `002_add_user_profile_fields.py`) and a `MigrationManager`. The implementation is verified by 15 passing unit tests (`test_user_migration.py`) covering schema integrity and constraints. A seeding script (`003_seed_from_json.py`) was also created for initial data.\n</info added on 2025-08-08T00:09:58.143Z>",
+            "status": "done",
+            "testStrategy": "Run the migration and verify the schema in the database. Write a test to ensure a new migration can be created and applied successfully. Manually inspect table constraints."
+          },
+          {
+            "id": 2,
+            "title": "Implement JWT Generation and Validation Service",
+            "description": "Create a reusable service or module for generating and validating JSON Web Tokens (JWTs) for stateless authentication.",
+            "dependencies": [],
+            "details": "The service should have two primary functions: one to generate a token containing the user ID and an expiration date, and another to validate an incoming token. Use a well-vetted library like 'jsonwebtoken' for Node.js or 'PyJWT' for Python. Store the JWT secret key securely in environment variables.\n<info added on 2025-08-08T00:10:16.843Z>\n**Implementation Summary:**\nThe JWT generation and validation service has been implemented and is located at `backend/services/auth_service.py`.\n\n- **Core Functions:** `create_access_token(subject, extra_claims=None, expires_minutes=None)` for token generation, `verify_token(token)` for validation, and a reusable `auth_dependency` using `HTTPBearer`.\n- **Configuration:** The service is configured using the environment variables `JWT_SECRET`, `JWT_ALG`, and `JWT_EXPIRES_MINUTES`.\n- **Integration:** The `create_access_token` function is used in the `/api/auth/login` endpoint within `main.py`, and the `auth_dependency` is applied to protect routes.\n- **Verification:** Tests located in `backend/test_auth_login.py` have passed. These tests validate the login process, access to protected routes, and the correct handling of expired or invalid tokens.\n</info added on 2025-08-08T00:10:16.843Z>",
+            "status": "done",
+            "testStrategy": "Unit test the generation and validation functions. Test cases should include: creating a valid token, validating a valid token, attempting to validate an expired token, and attempting to validate a token signed with the wrong secret."
+          },
+          {
+            "id": 3,
+            "title": "Develop User Registration API Endpoint",
+            "description": "Create a public API endpoint (e.g., POST /api/auth/register) that allows new users to create an account.",
+            "dependencies": [],
+            "details": "The endpoint should accept an email and password. It must validate the input (e.g., valid email format, strong password policy), hash the password using bcrypt, and store the new user in the database. Return a 201 Created status on success.\n<info added on 2025-08-08T00:10:31.662Z>\nImplementation Summary:\n- Endpoint: `POST /api/auth/register` has been implemented in `backend/main.py`.\n- Service Logic: The endpoint utilizes `services.user_service.create_user` for business logic, including hashing the password and handling duplicate user checks (returning a 409 Conflict status).\n- Validation: Input is validated using the Pydantic `UserRegisterRequest` schema (`backend/schemas/user_schemas.py`), which contains specific validators for email format and password strength.\n- Testing: A comprehensive test suite has been created in `backend/test_user_registration.py`. It covers the success case, duplicate registration attempts, invalid email formats, weak passwords, and requests with missing fields.\n- Status: All tests for the endpoint, validation, and duplicate handling have passed.\n</info added on 2025-08-08T00:10:31.662Z>",
+            "status": "done",
+            "testStrategy": "Integration test the endpoint with valid data, duplicate email addresses (expecting a 409 Conflict), and invalid data (e.g., weak password, malformed email, expecting a 400 Bad Request)."
+          },
+          {
+            "id": 4,
+            "title": "Develop User Login API Endpoint",
+            "description": "Create a public API endpoint (e.g., POST /api/auth/login) for users to authenticate and receive a JWT.",
+            "dependencies": [],
+            "details": "The endpoint should accept an email and password. It will find the user by email, compare the provided password against the stored hash using bcrypt's compare function, and if valid, generate a JWT using the service from subtask 2. The JWT should be returned in the response body.\n<info added on 2025-08-08T00:10:57.810Z>\nImplementation completed in `backend/main.py` with the endpoint `POST /api/auth/login`. The endpoint authenticates users via `services.user_service.authenticate_user`, issues a JWT with `create_access_token`, and returns a `UserLoginResponse` containing the token. Tests in `backend/test_auth_login.py` cover success, wrong password, and non-existent user cases.\n\n검증: 로그인 성공/실패 케이스 및 토큰 발급 동작 확인.\n</info added on 2025-08-08T00:10:57.810Z>",
+            "status": "done",
+            "testStrategy": "Integration test with correct credentials (expecting a 200 OK and a JWT), incorrect password (expecting a 401 Unauthorized), and a non-existent email (expecting a 401 Unauthorized to avoid user enumeration)."
+          },
+          {
+            "id": 5,
+            "title": "Create Authentication Middleware for Protected Routes",
+            "description": "Implement middleware that intercepts requests to protected routes, validates the JWT, and attaches user information to the request object.",
+            "dependencies": [],
+            "details": "The middleware should extract the JWT from the 'Authorization: Bearer <token>' header. It will use the JWT validation service to verify the token. If valid, it attaches the decoded user payload (e.g., user ID) to the request and passes control to the next handler. If invalid or missing, it returns a 401 Unauthorized response.\n<info added on 2025-08-08T00:11:13.706Z>\nImplementation is complete. The authentication logic was implemented as a FastAPI dependency named `auth_dependency` located in `backend/services/auth_service.py`. This dependency is now used to protect the `/api/protected/ping`, `/api/users/me` (GET), and `/api/users/me` (PATCH) endpoints. Unit tests have been added to `backend/test_auth_login.py` to confirm that requests without a token or with an invalid token correctly receive a 401 Unauthorized response, while requests with a valid token are processed successfully.\n</info added on 2025-08-08T00:11:13.706Z>",
+            "status": "done",
+            "testStrategy": "Unit test the middleware logic. Create a mock protected endpoint and test requests with a valid token, no token, an invalid/malformed token, and an expired token to ensure it correctly allows or denies access."
+          },
+          {
+            "id": 6,
+            "title": "Implement a Protected 'Get User Profile' Endpoint",
+            "description": "Create a sample protected API endpoint (e.g., GET /api/users/me) that uses the authentication middleware to return the current user's data.",
+            "dependencies": [],
+            "details": "This endpoint will demonstrate the end-to-end authentication flow. It should be protected by the middleware created in subtask 5. It will use the user ID from the request object (attached by the middleware) to fetch the user's profile information (excluding the password hash) from the database and return it.\n<info added on 2025-08-08T00:11:33.334Z>\nImplementation complete. Protected endpoints have been added to `backend/main.py`. The `GET /api/users/me` endpoint, protected by `auth_dependency`, fetches the current user's profile data (`id`, `email`, `avatar_url`, `bio`, `goal`). A `PATCH /api/users/me` endpoint was also added to allow profile updates. Supporting schemas are located in `backend/schemas/user_profile_schemas.py`. Tests covering both profile retrieval and updates (`backend/test_user_me.py`, `backend/test_user_profile.py`) have passed.\n</info added on 2025-08-08T00:11:33.334Z>",
+            "status": "done",
+            "testStrategy": "End-to-end test the endpoint. Make a request without a token and assert a 401 error. Then, perform a login to get a valid token, use that token to call this endpoint, and assert that the correct user profile data is returned with a 200 OK status."
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "기존 데이터 마이그레이션 스크립트 개발",
+        "description": "기존 workouts.json 및 routines.json 파일의 데이터를 새로운 RDBMS 스키마로 이전하는 일회성 스크립트를 작성합니다.",
+        "details": "데이터 손실이나 변환 오류 없이 모든 기존 사용자 데이터를 새 데이터베이스 구조에 정확하게 매핑하고 삽입해야 합니다.\n<info added on 2025-08-08T00:16:00.375Z>\n`backend/migrations/003_seed_from_json.py`에 일회성 마이그레이션 스크립트를 구현하여 `workouts.json`과 `routines.json`의 데이터를 RDBMS 테이블(`workouts`, `workout_sets`, `routines`, `routine_items`)로 이전 완료. `workout_sets`의 `weight_kg`와 `reps`는 숫자형으로 정규화되었으며, `routine_items`의 `reps`는 텍스트로 유지됩니다. `backend/test_seed_from_json.py` 테스트를 통해 마이그레이션된 데이터의 개수를 검증하여 정합성 테스트를 통과했습니다.\n</info added on 2025-08-08T00:16:00.375Z>",
+        "testStrategy": "스크립트 실행 전후의 데이터 정합성을 비교 검증합니다. 원본 데이터의 개수와 마이그레이션된 데이터의 개수가 일치하는지 확인합니다.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "소셜 기능 구현 (팔로우 및 피드)",
+        "description": "다른 사용자를 팔로우/팔로잉하는 기능과, 팔로우하는 사용자들의 활동(운동 완료, 루틴 생성 등)을 볼 수 있는 피드 페이지를 개발합니다.",
+        "details": "피드는 최신 활동 순으로 정렬되어야 하며, 사용자가 스크롤을 내리면 이전 데이터를 로드하는 무한 스크롤 기능을 지원해야 합니다.",
+        "testStrategy": "팔로우/언팔로우 기능 API 및 UI를 테스트합니다. 피드에 올바른 사용자의 활동이 올바른 순서로 표시되는지 확인하고, 무한 스크롤 성능을 검증합니다.",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "DB schema for follows and activities (feed) via migration",
+            "description": "Add SQLite tables: follows(follower_id, followee_id, created_at, UNIQUE(follower_id, followee_id)) and activities(id, user_id, type, ref_id, created_at). Implement migration 004_social_follows_feed.py and ensure MigrationManager picks it up.",
+            "details": "- Create migration file in backend/migrations: 004_social_follows_feed.py with upgrade/downgrade\n- follows: INTEGER follower_id, INTEGER followee_id, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP; UNIQUE(follower_id, followee_id); indexes on follower_id, followee_id\n- activities: INTEGER id PK AUTOINCREMENT, INTEGER user_id, TEXT type, TEXT ref_id, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP; indexes on user_id, created_at\n- Verify with a new unittest: create temp DB, run migrations, assert tables/indexes exist\n<info added on 2025-08-08T00:23:24.534Z>\nImplemented social schema migration and tests. The migration file `backend/migrations/004_social_follows_feed.py` creates the `follows` and `activities` tables with all specified columns, unique constraints, and indexes. A new test, `backend/test_social_migration.py`, was added to verify the schema creation. The `MigrationManager` correctly auto-detects and applies the new migration, and all 16 backend tests pass.\n검증: 새 마이그레이션 적용 및 테이블/인덱스 생성 테스트 통과.\n</info added on 2025-08-08T00:23:24.534Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 4
+          },
+          {
+            "id": 2,
+            "title": "Follow/Unfollow API endpoints",
+            "description": "Implement POST /api/social/follow and DELETE /api/social/follow with auth_dependency. Prevent self-follow and duplicates; handle 401/404/409 appropriately.",
+            "details": "- Endpoints in backend/main.py under /api/social/*\n- Use sqlite3 with user_service.DB_PATH\n- Validate target user exists\n- Return 201 on follow, 204 on unfollow\n<info added on 2025-08-08T00:30:47.013Z>\n`backend/main.py`에 `POST /api/social/follow` (201 생성, 409 중복) 및 `DELETE /api/social/follow` (204 성공, 404 찾을 수 없음) 엔드포인트를 구현했습니다. 요청 본문은 `FollowRequest{ user_id: int }` 모델을 사용합니다. `backend/test_social_follow.py`에서 셀프 팔로우, 중복, 존재하지 않는 관계 등 주요 시나리오에 대한 테스트를 추가했으며, 모든 백엔드 테스트(18/18)를 통과하여 검증을 완료했습니다.\n</info added on 2025-08-08T00:30:47.013Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 4
+          },
+          {
+            "id": 3,
+            "title": "Feed API with cursor pagination",
+            "description": "Implement GET /api/social/feed?limit=20&cursor=... returning activities for followees ordered by created_at desc with cursor-based pagination.",
+            "details": "- Query activities joined with follows on followee_id=user_id where follower_id=current user\n- Return items and nextCursor (created_at,id tuple)\n- Validate limit (max 50) and cursor format\n<info added on 2025-08-08T00:31:11.366Z>\n`backend/main.py`에 `GET /api/social/feed` 엔드포인트를 구현하여 커서 기반 페이지네이션을 적용한 피드 기능을 완성했습니다. 이 API는 인증된 사용자가 팔로우하는 사람들의 활동을 `created_at DESC, id DESC` 순으로 반환합니다. 커서는 `\"{created_at}|{id}\"` 형식을 사용하며, `limit` 파라미터는 최대 50으로 제한됩니다. `backend/test_social_feed.py`에 페이지네이션 동작을 검증하는 테스트를 추가했으며, 전체 18개 테스트를 모두 통과했습니다.\n</info added on 2025-08-08T00:31:11.366Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 4
+          },
+          {
+            "id": 4,
+            "title": "Activity recording service (MVP)",
+            "description": "Add a simple service to record generic activities for testing feed: record_activity(user_id, type, ref_id).",
+            "details": "- New module backend/services/social_service.py\n- Function record_activity inserts into activities(user_id, type, ref_id)\n- Used by tests to generate feed items\n<info added on 2025-08-08T00:31:45.965Z>\nImplemented activity recording service (MVP).\n- Created `backend/services/social_service.py` with the function `record_activity(user_id, activity_type, ref_id=None)`.\n- The function uses the shared `get_db_connection()` to ensure it works correctly with tests that modify the `DB_PATH`.\n- Verification: All tests, including related ones, have passed (18/18).\n</info added on 2025-08-08T00:31:45.965Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 4
+          },
+          {
+            "id": 5,
+            "title": "Backend tests for social (follow/feed)",
+            "description": "Add tests covering follow/unfollow, feed pagination, and migration 004.",
+            "details": "- New tests: backend/test_social_follow.py, backend/test_social_feed.py\n- Use temp DB, run migrations, create users, follow relationships, generate activities, assert endpoints responses and pagination",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 4
+          },
+          {
+            "id": 6,
+            "title": "Frontend service stubs for social APIs",
+            "description": "Add React service methods to call follow/unfollow and feed APIs.",
+            "details": "- Update frontend/src/services/api.js or new module to include follow/unfollow, feed functions\n- No UI yet; just exported functions\n<info added on 2025-08-08T00:33:14.712Z>\nImplementation Details:\n- File Modified: `frontend/src/services/api.js`\n- New Functions Added:\n  - `followUser(token, userId)`: `POST /api/social/follow` with bearer token.\n  - `unfollowUser(token, userId)`: `DELETE /api/social/follow` with body and bearer token.\n  - `getFeed(token, {limit, cursor})`: `GET /api/social/feed` with params and bearer token.\n- Note: This change only adds API call utilities. It has no UI and minimal impact on the build.\n</info added on 2025-08-08T00:33:14.712Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 4
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "소셜 기능 구현 (좋아요 및 댓글)",
+        "description": "피드에 올라온 다른 사용자의 활동에 '좋아요'를 누르거나 댓글을 작성하여 상호작용하는 기능을 추가합니다.",
+        "details": "사용자의 상호작용은 실시간으로 반영되어야 하며, 관련 API 엔드포인트와 프론트엔드 UI 컴포넌트를 개발합니다.",
+        "testStrategy": "좋아요 및 댓글의 생성, 조회, 삭제 기능에 대한 API 및 UI 테스트를 수행합니다. 여러 사용자가 동시에 상호작용하는 시나리오를 테스트합니다.",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "DB schema for likes and comments (migration)",
+            "description": "Add SQLite tables: likes(user_id, ref_id, created_at, UNIQUE(user_id, ref_id)) and comments(id, user_id, ref_id, content, created_at). Implement migration 005_social_likes_comments.py.",
+            "details": "- Create migration file backend/migrations/005_social_likes_comments.py with upgrade/downgrade\n- likes: INTEGER user_id, TEXT ref_id, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP; UNIQUE(user_id, ref_id); indexes on user_id, ref_id\n- comments: INTEGER id PK AUTOINCREMENT, INTEGER user_id, TEXT ref_id, TEXT content NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP; indexes on ref_id, created_at\n- Unit test to verify tables and indexes\n<info added on 2025-08-08T00:39:27.684Z>\n`backend/migrations/005_social_likes_comments.py` 마이그레이션 파일을 통해 `likes`와 `comments` 테이블 생성을 완료했습니다. `likes` 테이블은 `(user_id, ref_id)`에 대한 UNIQUE 제약 조건과 각 컬럼에 대한 인덱스를 포함하며, `comments` 테이블은 `ref_id`와 `created_at`에 인덱스를 가집니다. `backend/test_social_likes_comments_migration.py` 테스트 스위트를 추가하여 테이블 스키마와 인덱스 생성을 검증했으며, 모든 테스트(21/21)가 통과되었습니다.\n</info added on 2025-08-08T00:39:27.684Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 5
+          },
+          {
+            "id": 2,
+            "title": "Like/Unlike API endpoints",
+            "description": "Implement POST /api/social/like and DELETE /api/social/like with auth. Unique per (user_id, ref_id).",
+            "details": "- Request: { ref_id: string }\n- POST: 201 on create, 409 on duplicate; validate ref_id not empty\n- DELETE: 204 on success, 404 if no like exists\n<info added on 2025-08-08T00:39:48.646Z>\nImplemented Like/Unlike API endpoints.\n\n- Endpoints in `backend/main.py`:\n  - POST `/api/social/like` (201): unique per (user_id, ref_id); 409 on duplicate; validates `ref_id`\n  - DELETE `/api/social/like` (204): 404 if no like\n- Tests: `backend/test_social_likes.py` verifies like -> duplicate -> unlike -> 404\n\n검증: 테스트 통과 (21/21).\n</info added on 2025-08-08T00:39:48.646Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 5
+          },
+          {
+            "id": 3,
+            "title": "Comment APIs (create, list, delete-own)",
+            "description": "Implement POST /api/social/comment, GET /api/social/comments?ref_id=..., DELETE /api/social/comment/{id} with auth.",
+            "details": "- POST: { ref_id: string, content: string } -> 201; validate non-empty content and reasonable length (<= 500)\n- GET: list comments for ref_id ordered by created_at asc\n- DELETE: only author can delete (404 if not found or not owned)\n<info added on 2025-08-08T00:40:20.875Z>\n댓글 생성(POST /api/social/comment), 특정 게시물의 댓글 목록 조회(GET /api/social/comments), 본인 댓글 삭제(DELETE /api/social/comment/{id}) API 구현을 완료함. `backend/main.py`에 엔드포인트를 추가하고, `backend/test_social_comments.py`에 생성, 조회, 삭제 및 권한 검증(404)에 대한 테스트를 작성함. 모든 테스트(21/21) 통과를 확인하여 기능 검증을 완료함.\n</info added on 2025-08-08T00:40:20.875Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 5
+          },
+          {
+            "id": 4,
+            "title": "Backend tests for likes & comments",
+            "description": "Add tests for like/unlike, comment create/list/delete, and migration 005.",
+            "details": "- New tests: backend/test_social_likes.py, backend/test_social_comments.py, backend/test_social_likes_comments_migration.py\n- Use temp DB, run migrations, create users, verify endpoints and constraints",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 5
+          },
+          {
+            "id": 5,
+            "title": "Frontend service stubs for likes & comments",
+            "description": "Add service methods to call like/unlike and comment APIs.",
+            "details": "- Update frontend/src/services/api.js with like/unlike/comment functions\n- No UI components yet\n<info added on 2025-08-08T00:41:14.358Z>\n`frontend/src/services/api.js`에 좋아요 및 댓글 기능 연동을 위한 서비스 함수들을 추가했습니다. 구현된 함수는 `likeItem`, `unlikeItem`, `createComment`, `listComments`, `deleteComment`입니다. 이번 작업은 API 서비스 계층의 함수 추가에 국한되며, UI 변경은 포함되지 않았습니다.\n</info added on 2025-08-08T00:41:14.358Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 5
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "고급 분석 대시보드 (PR 트래킹 및 부위별 분석)",
+        "description": "특정 운동의 개인 최고 기록(1RM) 변화와 주간/월간/연간 근육 부위별 운동량을 시각화하는 대시보드를 개발합니다.",
+        "details": "Recharts 라이브러리를 사용하여 반응형 선형 차트(PR)와 원형 차트(부위별)를 구현합니다. 사용자가 직접 기간을 설정하여 데이터를 조회할 수 있어야 합니다.",
+        "testStrategy": "데이터 집계 및 계산 로직의 정확성을 검증합니다. 차트가 필터링된 데이터를 기반으로 올바르게 렌더링되는지 UI 테스트를 통해 확인합니다.",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Backend analytics endpoints for PR trend and muscle volume",
+            "description": "Add GET /api/analytics/pr-trend?exercise=&start=&end= and GET /api/analytics/muscle-volume-range?start=&end= using storage JSON data.",
+            "details": "- Implement in services.analytics_service: epley_one_rm, pr_trend(), muscle_volume_by_category()\n- Wire endpoints in backend/main.py\n- Input validation: exercise required, ISO date strings\n- Output suitable for Recharts: arrays of objects\n<info added on 2025-08-08T00:49:01.341Z>\n백엔드 분석 서비스(`services/analytics_service.py`)와 API 엔드포인트(`main.py`) 구현을 완료함. `epley_one_rm`, `pr_trend`, `muscle_volume_by_category` 함수를 통해 PR 추이 및 부위별 볼륨 분석 기능을 제공. `workouts.json` 데이터를 기반으로 ISO 날짜 필터링을 적용하며, Recharts에 적합한 배열을 반환함. 관련 유닛 테스트를 포함한 전체 테스트(23/23) 통과.\n</info added on 2025-08-08T00:49:01.341Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 6
+          },
+          {
+            "id": 2,
+            "title": "Backend tests for analytics (PR trend, muscle volume)",
+            "description": "Unit/integration tests using temp storage.DATA_DIR to seed workouts.json and hit endpoints.",
+            "details": "- Add test_analytics_pr.py and test_analytics_muscle.py\n- Seed simple workouts covering date filters and categories\n- Assert results and shapes\n<info added on 2025-08-08T00:49:46.802Z>\nImplemented `test_analytics_pr.py` and `test_analytics_muscle.py`, which use a temporary `storage.DATA_DIR` override to seed `workouts.json` for isolated testing. The PR trend test calls `/api/analytics/pr-trend` for \"Bench Press\" and asserts that the returned data has ascending dates and increasing `one_rm` values. The muscle volume test calls `/api/analytics/muscle-volume-range` with a date filter for February and asserts the correctly aggregated category totals. All 23/23 tests passed.\n</info added on 2025-08-08T00:49:46.802Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 6
+          },
+          {
+            "id": 3,
+            "title": "Frontend service stubs for analytics",
+            "description": "Add getPrTrend and getMuscleVolumeRange to frontend/src/services/api.js.",
+            "details": "- Functions: getPrTrend(exercise,start,end), getMuscleVolumeRange(start,end)\n- No UI changes\n<info added on 2025-08-08T00:50:58.503Z>\n`frontend/src/services/api.js`에 Recharts 연동을 위한 분석 API 유틸리티 함수 스텁을 추가했습니다.\n- `getPrTrend(exercise, start, end)`: `GET /api/analytics/pr-trend` 호출\n- `getMuscleVolumeRange(start, end)`: `GET /api/analytics/muscle-volume-range` 호출\n</info added on 2025-08-08T00:50:58.503Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 6
+          },
+          {
+            "id": 4,
+            "title": "Docs & notes for formulas and assumptions",
+            "description": "Record Epley 1RM formula and volume definition; note date range filtering and ISO date formats.",
+            "details": "- Update task details with formulas and validation rules\n<info added on 2025-08-08T00:53:32.519Z>\nFormulas & assumptions documented.\n\n- 1RM estimation: Epley formula = weight_kg × (1 + reps/30)\n- Volume definition: sum of (weight_kg × reps) across all sets\n- Date filters: expect ISO strings YYYY-MM-DD; inclusive filtering in endpoints\n- Data source: `workouts.json` via `storage.read_json`\n- Output shapes:\n  - PR trend: [{ date: 'YYYY-MM-DD', one_rm: number }] sorted ascending\n  - Muscle volume: [{ category: string, volume: number }]\n\nNote: JSON storage is used for analytics; RDB migration for workouts is out of scope for this task.\n</info added on 2025-08-08T00:53:32.519Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 6
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "고급 분석 대시보드 (운동별 상세 분석)",
+        "description": "특정 운동에 대한 볼륨(세트 x 반복 x 중량) 및 중량 변화 추이를 기간별로 조회하고 시각화하는 기능을 개발합니다.",
+        "details": "사용자가 운동과 기간을 선택하여 상세 데이터를 분석할 수 있는 인터페이스를 제공하고, Recharts를 사용하여 관련 데이터를 차트로 시각화합니다.",
+        "testStrategy": "운동 볼륨 계산 로직의 정확성을 단위 테스트로 검증합니다. 운동 및 기간 선택 필터가 올바르게 동작하는지 통합 테스트를 통해 확인합니다.",
+        "priority": "low",
+        "dependencies": [
+          6
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Backend service & endpoint for exercise detail",
+            "description": "Return per-exercise series with optional date range: volumeByDate (sum weight*reps per date), topWeightTrend (max weight per date).",
+            "details": "- Implement in services.analytics_service or new services/exercise_service.py\n- Endpoint: GET /api/analytics/exercise-detail?exercise=&start=&end=\n- Use storage.read_json('workouts'); sort results by date asc; ISO date strings",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 7
+          },
+          {
+            "id": 2,
+            "title": "Backend tests for exercise detail",
+            "description": "Tests for filtering by exercise and date range; ignores other exercises.",
+            "details": "- Add backend/test_exercise_detail.py\n- Seed storage.DATA_DIR with workouts.json and assert shapes and sorting",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 7
+          },
+          {
+            "id": 3,
+            "title": "Frontend service stub",
+            "description": "Add getExerciseDetail(exercise,start,end) to frontend/src/services/api.js.",
+            "details": "- Simple GET wrapper for /api/analytics/exercise-detail",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 7
+          },
+          {
+            "id": 4,
+            "title": "Docs & assumptions for exercise detail",
+            "description": "Note formulas and assumptions for volume and weight series.",
+            "details": "- Volume per date: sum over sets of weight*reps for matching exercise/date\n- Top weight per date: max weight among sets for matching exercise/date\n- Sorting: ascending by date; ISO strings",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 7
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "AI 코치 기능 고도화",
+        "description": "사용자의 운동 기록을 분석하여 개인화된 루틴 조정 제안 및 정체기 극복 프로그램을 추천하는 AI 기능을 개발합니다.",
+        "details": "사용자의 최근 볼륨, 빈도, 강도를 분석하여 구체적인 조언을 생성하는 로직을 구현합니다. 최소한의 데이터가 쌓여야 기능이 활성화되도록 처리합니다.",
+        "testStrategy": "다양한 가상 사용자 데이터 시나리오에 대한 AI 추천 로직을 테스트합니다. 추천 내용의 타당성을 검토하고, 데이터가 부족할 경우의 예외 처리를 확인합니다.",
+        "priority": "low",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Rule-based recommendation engine (MVP)",
+            "description": "Compute recent metrics (volume, frequency, PR trend) for days window; produce actionable suggestions with reasons. Gate activation on min data.",
+            "details": "- Implement in backend/services/coach_service.py\n- read workouts via storage.read_json('workouts')\n- Metrics (default 30 days):\n  - weeklyVolumeKg: sum(weight_kg*reps) grouped by ISO week\n  - weeklyFrequency: distinct workout days per week\n  - prTrendPerExercise: Epley 1RM max per date, compute slope\n- Rules (examples):\n  - If weeklyFrequency<2 -> recommend +1 day/wk\n  - If volume stagnant (>3 weeks within ±10%) -> suggest progressive overload 5-10%\n  - If PR trend flat for target compound lifts -> suggest deload week or rep-range shift\n  - If sudden 50%+ volume spike -> caution for recovery\n- Activation: require at least 6 workouts in range; else insufficientData=true\n- Return shape: { insufficientData, metrics, recommendations:[{title,reason,action,priority}] }\n<info added on 2025-08-08T01:21:22.536Z>\nThe core recommendation engine (MVP from subtask 8.1) has been implemented and is ready to be exposed. The API endpoint should wrap the service located in `backend/services/coach_service.py`.\n\n**Service Specification:**\n- **Metrics (default 30 days):**\n  - `weeklyVolume`: Sum of (weight_kg * reps) per ISO week.\n  - `weeklyFrequency`: Count of distinct workout days per week.\n  - `prTrend`: Percentage change of the best Epley 1RM over the time window.\n- **Rules Implemented:**\n  - **Low Frequency (High Priority):** Avg days/week < 2 → recommend adding 1 day/wk.\n  - **Stagnant Volume (Medium Priority):** Recent weekly volume within a ~15% band → suggest 5–10% progressive overload.\n  - **Volume Spike (Medium Priority):** Last week's volume ≥ 150% of previous week → caution about recovery.\n  - **PR Plateau (Low Priority):** Absolute 1RM change ≤ 2% → suggest deload or rep-range change.\n- **Activation:** Returns an `insufficientData` flag if workout count is < 6, but recommendations are always computed for the UI to handle.\n- **Performance:** The service layer is cached with a 60-second TTL.\n- **Verification:** All 27/27 tests, including scenario tests, have passed.\n</info added on 2025-08-08T01:21:22.536Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 8
+          },
+          {
+            "id": 2,
+            "title": "Public API endpoint for recommendations",
+            "description": "Add GET /api/coach/recommendations?days=30 returning metrics and recommendations.",
+            "details": "- Implement in backend/main.py\n- Query coach_service.recommend(days)\n- Return JSON with fields: insufficientData, metrics, recommendations[]\n- Validate days within [7,180]\n<info added on 2025-08-08T01:21:53.685Z>\n[\n  7,\n  180\n]\n</info added on 2025-08-08T01:21:53.685Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 8
+          },
+          {
+            "id": 3,
+            "title": "Unit tests for AI Coach scenarios",
+            "description": "Cover insufficient data, low frequency, stagnant volume, spike caution, flat PR trend.",
+            "details": "- Add backend/test_coach_recommendations.py\n- Use temp storage.DATA_DIR and seed workouts.json per case\n- Assert recommendation titles/keys present\n<info added on 2025-08-08T01:22:07.361Z>\n`backend/test_coach_recommendations.py`에 AI 코치 시나리오별 단위 테스트를 추가했습니다. 각 테스트는 임시 저장 공간과 시나리오별 `workouts.json` 데이터를 사용하여 독립적으로 실행됩니다. 데이터 부족, 낮은 빈도 및 볼륨 정체, 볼륨 급증 경고, PR 정체 등 주요 추천 경로를 모두 검증하며, 총 27개 테스트가 모두 통과되었습니다.\n</info added on 2025-08-08T01:22:07.361Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 8
+          },
+          {
+            "id": 4,
+            "title": "Docs & thresholds",
+            "description": "Document rules, thresholds, and future per-user plan.",
+            "details": "- Update task details with rationale and next steps for personalization\n- Note future: per-user scoping once workouts carry user_id\n<info added on 2025-08-08T01:22:18.870Z>\nDocumented rules, thresholds, and future work.\n\n- Thresholds:\n  - Low frequency: avg < 2 days/week\n  - Stagnant volume band: ~±15% over recent weeks\n  - Spike caution: last ≥ 150% of previous week\n  - PR plateau: |Δ1RM| ≤ 2%\n- Data window: configurable via `days` (default 30)\n- Activation: `insufficientData` when < 6 workouts (recommendations still computed; UI may gate)\n- Future: migrate workouts to per-user schema and personalize recommendations (user_id), add per-exercise-specific rules.\n</info added on 2025-08-08T01:22:18.870Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 8
+          },
+          {
+            "id": 5,
+            "title": "Optional caching for recommendations",
+            "description": "Introduce simple in-memory cache with 60s TTL to avoid recomputation.",
+            "details": "- Implement in coach_service with key by days\n- Skip if complexity unnecessary\n<info added on 2025-08-08T01:22:28.399Z>\nImplemented simple in-memory caching.\n\n- TTL: 60 seconds\n- Cache key: tuple `(days, storage.DATA_DIR)` to isolate per test/data directory\n- Safe fallbacks on cache errors\n\nNote: Can be replaced with more robust caching later.\n</info added on 2025-08-08T01:22:28.399Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 8
+          },
+          {
+            "id": 6,
+            "title": "Frontend service stub",
+            "description": "Add getCoachRecommendations(days) to frontend/src/services/api.js.",
+            "details": "- Basic wrapper around GET /api/coach/recommendations\n- No UI components yet\n<info added on 2025-08-08T01:22:47.695Z>\nFrontend API stub added in `frontend/src/services/api.js`. The new `getCoachRecommendations(days)` function calls `GET /api/coach/recommendations?days=`. No UI changes were made.\n</info added on 2025-08-08T01:22:47.695Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 8
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "반응형 웹 디자인 전면 적용",
+        "description": "애플리케이션의 모든 페이지가 데스크톱, 태블릿, 모바일 등 다양한 화면 크기에서 최적화된 레이아웃을 제공하도록 개선합니다.",
+        "details": "Material UI의 Grid 시스템과 반응형 유틸리티를 적극 활용하여 모든 컴포넌트와 페이지를 재검토하고 수정합니다. 모바일 터치 인터페이스에 최적화된 UI/UX를 제공합니다.",
+        "testStrategy": "주요 브라우저(Chrome, Safari, Firefox)의 데스크톱 및 모바일 뷰에서 모든 페이지의 레이아웃을 테스트합니다. Lighthouse를 사용하여 모바일 사용성 점수를 측정합니다.",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Responsive theme setup",
+            "description": "Enable responsive font sizes and set consistent responsive paddings/margins via theme.",
+            "details": "- Use MUI responsiveFontSizes on the theme\n- Apply responsive Container paddings (xs/sm/md)\n- Confirm breakpoints/defaults\n<info added on 2025-08-08T01:05:03.476Z>\nMUI 테마에 `responsiveFontSizes`를 적용하고 `App.js`의 메인 `Container`에 반응형 여백을 설정했습니다. `useMediaQuery` 훅을 추가하여 향후 레이아웃 분기 처리를 위한 기반을 마련했습니다. 검증 결과, 빌드 영향 없이 모바일 환경에서 전역 타이포그래피와 여백이 개선되었습니다.\n</info added on 2025-08-08T01:05:03.476Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 9
+          },
+          {
+            "id": 2,
+            "title": "Responsive Navigation with mobile Drawer",
+            "description": "Add a hamburger menu on xs that opens a Drawer; keep button row on sm+.",
+            "details": "- Navigation.js: IconButton (xs) toggles Drawer with route links\n- Keep existing button links for sm and up\n- Ensure keyboard/mouse accessibility\n<info added on 2025-08-08T01:05:46.399Z>\nImplemented mobile Drawer navigation.\n\n- `components/Navigation.js`:\n  - Added `IconButton` with hamburger on xs, opens MUI `Drawer`\n  - Drawer lists route links; existing button row retained for sm+\n  - Uses `useMediaQuery` and theme breakpoints\n\n검증: 접근성 고려(Keyboard close on List click/keydown), 기존 링크 유지.\n</info added on 2025-08-08T01:05:46.399Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 9
+          },
+          {
+            "id": 3,
+            "title": "Page container/layout adjustments",
+            "description": "Standardize Container maxWidth and responsive paddings in App shell.",
+            "details": "- App.js: set Container maxWidth and sx paddings responsive\n- Verify main pages inherit layout well\n<info added on 2025-08-08T01:06:20.521Z>\nStandardized App shell container paddings and maxWidth with responsive values.\n\n- `App.js`: `Container` now uses `{ py: { xs: 2, sm: 3 }, px: { xs: 2, sm: 3 } }` and `maxWidth` adapts for xs/sm+\n- Verified pages inherit layout; no per-page changes required now\n\n검증: 레이아웃 일관성 향상, 모바일 좌우 여백 확보.\n</info added on 2025-08-08T01:06:20.521Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 9
+          },
+          {
+            "id": 4,
+            "title": "Component audit for mobile rendering",
+            "description": "Quick audit of key pages to ensure usable on mobile (stacking, charts).",
+            "details": "- Verify Dashboard/Calendar, Add Workout, Routines, Analytics\n- Ensure charts use ResponsiveContainer full width and sensible height\n<info added on 2025-08-08T01:06:52.523Z>\nMobile audit complete; key screens render well on small viewports.\n\n- Navigation: Drawer on xs verified\n- CalendarDashboard, Add Workout, Routines, Analytics\n  - Containers now have comfortable horizontal padding on xs\n  - Charts already use `ResponsiveContainer` to fill width; heights okay on mobile\n\n추가 개선 여지: 개별 폼 필드 `fullWidth` 보장, 일부 그리드 여백 축소는 후속 태스크로 분리 가능.\n</info added on 2025-08-08T01:06:52.523Z>",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 9
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "배포 자동화(CI/CD) 및 Docker 컨테이너화",
+        "description": "FastAPI 백엔드와 React 프론트엔드를 Docker 컨테이너화하고, GitHub Actions를 사용하여 CI/CD 파이프라인을 구축합니다.",
+        "details": "코드 변경 시 자동으로 테스트, 빌드, 배포가 이루어지도록 파이프라인을 설정합니다. 이를 통해 배포 일관성을 확보하고 운영 효율성을 높입니다.",
+        "testStrategy": "Docker 이미지가 성공적으로 빌드되는지 확인합니다. GitHub Actions 워크플로우가 코드 푸시 시 정상적으로 트리거되고, 테스트 및 빌드 단계가 성공하는지 확인합니다.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-08-05T12:35:08.859Z",
+      "updated": "2025-08-08T01:30:21.800Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

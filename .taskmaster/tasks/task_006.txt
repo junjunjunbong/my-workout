@@ -1,0 +1,67 @@
+# Task ID: 6
+# Title: 고급 분석 대시보드 (PR 트래킹 및 부위별 분석)
+# Status: done
+# Dependencies: 2
+# Priority: medium
+# Description: 특정 운동의 개인 최고 기록(1RM) 변화와 주간/월간/연간 근육 부위별 운동량을 시각화하는 대시보드를 개발합니다.
+# Details:
+Recharts 라이브러리를 사용하여 반응형 선형 차트(PR)와 원형 차트(부위별)를 구현합니다. 사용자가 직접 기간을 설정하여 데이터를 조회할 수 있어야 합니다.
+
+# Test Strategy:
+데이터 집계 및 계산 로직의 정확성을 검증합니다. 차트가 필터링된 데이터를 기반으로 올바르게 렌더링되는지 UI 테스트를 통해 확인합니다.
+
+# Subtasks:
+## 1. Backend analytics endpoints for PR trend and muscle volume [done]
+### Dependencies: None
+### Description: Add GET /api/analytics/pr-trend?exercise=&start=&end= and GET /api/analytics/muscle-volume-range?start=&end= using storage JSON data.
+### Details:
+- Implement in services.analytics_service: epley_one_rm, pr_trend(), muscle_volume_by_category()
+- Wire endpoints in backend/main.py
+- Input validation: exercise required, ISO date strings
+- Output suitable for Recharts: arrays of objects
+<info added on 2025-08-08T00:49:01.341Z>
+백엔드 분석 서비스(`services/analytics_service.py`)와 API 엔드포인트(`main.py`) 구현을 완료함. `epley_one_rm`, `pr_trend`, `muscle_volume_by_category` 함수를 통해 PR 추이 및 부위별 볼륨 분석 기능을 제공. `workouts.json` 데이터를 기반으로 ISO 날짜 필터링을 적용하며, Recharts에 적합한 배열을 반환함. 관련 유닛 테스트를 포함한 전체 테스트(23/23) 통과.
+</info added on 2025-08-08T00:49:01.341Z>
+
+## 2. Backend tests for analytics (PR trend, muscle volume) [done]
+### Dependencies: None
+### Description: Unit/integration tests using temp storage.DATA_DIR to seed workouts.json and hit endpoints.
+### Details:
+- Add test_analytics_pr.py and test_analytics_muscle.py
+- Seed simple workouts covering date filters and categories
+- Assert results and shapes
+<info added on 2025-08-08T00:49:46.802Z>
+Implemented `test_analytics_pr.py` and `test_analytics_muscle.py`, which use a temporary `storage.DATA_DIR` override to seed `workouts.json` for isolated testing. The PR trend test calls `/api/analytics/pr-trend` for "Bench Press" and asserts that the returned data has ascending dates and increasing `one_rm` values. The muscle volume test calls `/api/analytics/muscle-volume-range` with a date filter for February and asserts the correctly aggregated category totals. All 23/23 tests passed.
+</info added on 2025-08-08T00:49:46.802Z>
+
+## 3. Frontend service stubs for analytics [done]
+### Dependencies: None
+### Description: Add getPrTrend and getMuscleVolumeRange to frontend/src/services/api.js.
+### Details:
+- Functions: getPrTrend(exercise,start,end), getMuscleVolumeRange(start,end)
+- No UI changes
+<info added on 2025-08-08T00:50:58.503Z>
+`frontend/src/services/api.js`에 Recharts 연동을 위한 분석 API 유틸리티 함수 스텁을 추가했습니다.
+- `getPrTrend(exercise, start, end)`: `GET /api/analytics/pr-trend` 호출
+- `getMuscleVolumeRange(start, end)`: `GET /api/analytics/muscle-volume-range` 호출
+</info added on 2025-08-08T00:50:58.503Z>
+
+## 4. Docs & notes for formulas and assumptions [done]
+### Dependencies: None
+### Description: Record Epley 1RM formula and volume definition; note date range filtering and ISO date formats.
+### Details:
+- Update task details with formulas and validation rules
+<info added on 2025-08-08T00:53:32.519Z>
+Formulas & assumptions documented.
+
+- 1RM estimation: Epley formula = weight_kg × (1 + reps/30)
+- Volume definition: sum of (weight_kg × reps) across all sets
+- Date filters: expect ISO strings YYYY-MM-DD; inclusive filtering in endpoints
+- Data source: `workouts.json` via `storage.read_json`
+- Output shapes:
+  - PR trend: [{ date: 'YYYY-MM-DD', one_rm: number }] sorted ascending
+  - Muscle volume: [{ category: string, volume: number }]
+
+Note: JSON storage is used for analytics; RDB migration for workouts is out of scope for this task.
+</info added on 2025-08-08T00:53:32.519Z>
+

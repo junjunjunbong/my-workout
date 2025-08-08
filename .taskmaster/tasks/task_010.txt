@@ -1,0 +1,11 @@
+# Task ID: 10
+# Title: 배포 자동화(CI/CD) 및 Docker 컨테이너화
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: FastAPI 백엔드와 React 프론트엔드를 Docker 컨테이너화하고, GitHub Actions를 사용하여 CI/CD 파이프라인을 구축합니다.
+# Details:
+코드 변경 시 자동으로 테스트, 빌드, 배포가 이루어지도록 파이프라인을 설정합니다. 이를 통해 배포 일관성을 확보하고 운영 효율성을 높입니다.
+
+# Test Strategy:
+Docker 이미지가 성공적으로 빌드되는지 확인합니다. GitHub Actions 워크플로우가 코드 푸시 시 정상적으로 트리거되고, 테스트 및 빌드 단계가 성공하는지 확인합니다.

@@ -1,0 +1,71 @@
+# Task ID: 5
+# Title: 소셜 기능 구현 (좋아요 및 댓글)
+# Status: done
+# Dependencies: 4
+# Priority: medium
+# Description: 피드에 올라온 다른 사용자의 활동에 '좋아요'를 누르거나 댓글을 작성하여 상호작용하는 기능을 추가합니다.
+# Details:
+사용자의 상호작용은 실시간으로 반영되어야 하며, 관련 API 엔드포인트와 프론트엔드 UI 컴포넌트를 개발합니다.
+
+# Test Strategy:
+좋아요 및 댓글의 생성, 조회, 삭제 기능에 대한 API 및 UI 테스트를 수행합니다. 여러 사용자가 동시에 상호작용하는 시나리오를 테스트합니다.
+
+# Subtasks:
+## 1. DB schema for likes and comments (migration) [done]
+### Dependencies: None
+### Description: Add SQLite tables: likes(user_id, ref_id, created_at, UNIQUE(user_id, ref_id)) and comments(id, user_id, ref_id, content, created_at). Implement migration 005_social_likes_comments.py.
+### Details:
+- Create migration file backend/migrations/005_social_likes_comments.py with upgrade/downgrade
+- likes: INTEGER user_id, TEXT ref_id, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP; UNIQUE(user_id, ref_id); indexes on user_id, ref_id
+- comments: INTEGER id PK AUTOINCREMENT, INTEGER user_id, TEXT ref_id, TEXT content NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP; indexes on ref_id, created_at
+- Unit test to verify tables and indexes
+<info added on 2025-08-08T00:39:27.684Z>
+`backend/migrations/005_social_likes_comments.py` 마이그레이션 파일을 통해 `likes`와 `comments` 테이블 생성을 완료했습니다. `likes` 테이블은 `(user_id, ref_id)`에 대한 UNIQUE 제약 조건과 각 컬럼에 대한 인덱스를 포함하며, `comments` 테이블은 `ref_id`와 `created_at`에 인덱스를 가집니다. `backend/test_social_likes_comments_migration.py` 테스트 스위트를 추가하여 테이블 스키마와 인덱스 생성을 검증했으며, 모든 테스트(21/21)가 통과되었습니다.
+</info added on 2025-08-08T00:39:27.684Z>
+
+## 2. Like/Unlike API endpoints [done]
+### Dependencies: None
+### Description: Implement POST /api/social/like and DELETE /api/social/like with auth. Unique per (user_id, ref_id).
+### Details:
+- Request: { ref_id: string }
+- POST: 201 on create, 409 on duplicate; validate ref_id not empty
+- DELETE: 204 on success, 404 if no like exists
+<info added on 2025-08-08T00:39:48.646Z>
+Implemented Like/Unlike API endpoints.
+
+- Endpoints in `backend/main.py`:
+  - POST `/api/social/like` (201): unique per (user_id, ref_id); 409 on duplicate; validates `ref_id`
+  - DELETE `/api/social/like` (204): 404 if no like
+- Tests: `backend/test_social_likes.py` verifies like -> duplicate -> unlike -> 404
+
+검증: 테스트 통과 (21/21).
+</info added on 2025-08-08T00:39:48.646Z>
+
+## 3. Comment APIs (create, list, delete-own) [done]
+### Dependencies: None
+### Description: Implement POST /api/social/comment, GET /api/social/comments?ref_id=..., DELETE /api/social/comment/{id} with auth.
+### Details:
+- POST: { ref_id: string, content: string } -> 201; validate non-empty content and reasonable length (<= 500)
+- GET: list comments for ref_id ordered by created_at asc
+- DELETE: only author can delete (404 if not found or not owned)
+<info added on 2025-08-08T00:40:20.875Z>
+댓글 생성(POST /api/social/comment), 특정 게시물의 댓글 목록 조회(GET /api/social/comments), 본인 댓글 삭제(DELETE /api/social/comment/{id}) API 구현을 완료함. `backend/main.py`에 엔드포인트를 추가하고, `backend/test_social_comments.py`에 생성, 조회, 삭제 및 권한 검증(404)에 대한 테스트를 작성함. 모든 테스트(21/21) 통과를 확인하여 기능 검증을 완료함.
+</info added on 2025-08-08T00:40:20.875Z>
+
+## 4. Backend tests for likes & comments [done]
+### Dependencies: None
+### Description: Add tests for like/unlike, comment create/list/delete, and migration 005.
+### Details:
+- New tests: backend/test_social_likes.py, backend/test_social_comments.py, backend/test_social_likes_comments_migration.py
+- Use temp DB, run migrations, create users, verify endpoints and constraints
+
+## 5. Frontend service stubs for likes & comments [done]
+### Dependencies: None
+### Description: Add service methods to call like/unlike and comment APIs.
+### Details:
+- Update frontend/src/services/api.js with like/unlike/comment functions
+- No UI components yet
+<info added on 2025-08-08T00:41:14.358Z>
+`frontend/src/services/api.js`에 좋아요 및 댓글 기능 연동을 위한 서비스 함수들을 추가했습니다. 구현된 함수는 `likeItem`, `unlikeItem`, `createComment`, `listComments`, `deleteComment`입니다. 이번 작업은 API 서비스 계층의 함수 추가에 국한되며, UI 변경은 포함되지 않았습니다.
+</info added on 2025-08-08T00:41:14.358Z>
+

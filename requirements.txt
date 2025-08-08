@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+streamlit==1.* 
+pandas 
+altair 
+python-dateutil
+sqlalchemy
+bcrypt
+bcrypt
+pydantic[email]
+bcrypt
+pydantic
+bcrypt

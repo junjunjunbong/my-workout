@@ -1,0 +1,74 @@
+# Task ID: 9
+# Title: 반응형 웹 디자인 전면 적용
+# Status: done
+# Dependencies: 2
+# Priority: medium
+# Description: 애플리케이션의 모든 페이지가 데스크톱, 태블릿, 모바일 등 다양한 화면 크기에서 최적화된 레이아웃을 제공하도록 개선합니다.
+# Details:
+Material UI의 Grid 시스템과 반응형 유틸리티를 적극 활용하여 모든 컴포넌트와 페이지를 재검토하고 수정합니다. 모바일 터치 인터페이스에 최적화된 UI/UX를 제공합니다.
+
+# Test Strategy:
+주요 브라우저(Chrome, Safari, Firefox)의 데스크톱 및 모바일 뷰에서 모든 페이지의 레이아웃을 테스트합니다. Lighthouse를 사용하여 모바일 사용성 점수를 측정합니다.
+
+# Subtasks:
+## 1. Responsive theme setup [done]
+### Dependencies: None
+### Description: Enable responsive font sizes and set consistent responsive paddings/margins via theme.
+### Details:
+- Use MUI responsiveFontSizes on the theme
+- Apply responsive Container paddings (xs/sm/md)
+- Confirm breakpoints/defaults
+<info added on 2025-08-08T01:05:03.476Z>
+MUI 테마에 `responsiveFontSizes`를 적용하고 `App.js`의 메인 `Container`에 반응형 여백을 설정했습니다. `useMediaQuery` 훅을 추가하여 향후 레이아웃 분기 처리를 위한 기반을 마련했습니다. 검증 결과, 빌드 영향 없이 모바일 환경에서 전역 타이포그래피와 여백이 개선되었습니다.
+</info added on 2025-08-08T01:05:03.476Z>
+
+## 2. Responsive Navigation with mobile Drawer [done]
+### Dependencies: None
+### Description: Add a hamburger menu on xs that opens a Drawer; keep button row on sm+.
+### Details:
+- Navigation.js: IconButton (xs) toggles Drawer with route links
+- Keep existing button links for sm and up
+- Ensure keyboard/mouse accessibility
+<info added on 2025-08-08T01:05:46.399Z>
+Implemented mobile Drawer navigation.
+
+- `components/Navigation.js`:
+  - Added `IconButton` with hamburger on xs, opens MUI `Drawer`
+  - Drawer lists route links; existing button row retained for sm+
+  - Uses `useMediaQuery` and theme breakpoints
+
+검증: 접근성 고려(Keyboard close on List click/keydown), 기존 링크 유지.
+</info added on 2025-08-08T01:05:46.399Z>
+
+## 3. Page container/layout adjustments [done]
+### Dependencies: None
+### Description: Standardize Container maxWidth and responsive paddings in App shell.
+### Details:
+- App.js: set Container maxWidth and sx paddings responsive
+- Verify main pages inherit layout well
+<info added on 2025-08-08T01:06:20.521Z>
+Standardized App shell container paddings and maxWidth with responsive values.
+
+- `App.js`: `Container` now uses `{ py: { xs: 2, sm: 3 }, px: { xs: 2, sm: 3 } }` and `maxWidth` adapts for xs/sm+
+- Verified pages inherit layout; no per-page changes required now
+
+검증: 레이아웃 일관성 향상, 모바일 좌우 여백 확보.
+</info added on 2025-08-08T01:06:20.521Z>
+
+## 4. Component audit for mobile rendering [done]
+### Dependencies: None
+### Description: Quick audit of key pages to ensure usable on mobile (stacking, charts).
+### Details:
+- Verify Dashboard/Calendar, Add Workout, Routines, Analytics
+- Ensure charts use ResponsiveContainer full width and sensible height
+<info added on 2025-08-08T01:06:52.523Z>
+Mobile audit complete; key screens render well on small viewports.
+
+- Navigation: Drawer on xs verified
+- CalendarDashboard, Add Workout, Routines, Analytics
+  - Containers now have comfortable horizontal padding on xs
+  - Charts already use `ResponsiveContainer` to fill width; heights okay on mobile
+
+추가 개선 여지: 개별 폼 필드 `fullWidth` 보장, 일부 그리드 여백 축소는 후속 태스크로 분리 가능.
+</info added on 2025-08-08T01:06:52.523Z>
+

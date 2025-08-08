@@ -1,0 +1,119 @@
+# Task ID: 8
+# Title: AI 코치 기능 고도화
+# Status: done
+# Dependencies: 2
+# Priority: low
+# Description: 사용자의 운동 기록을 분석하여 개인화된 루틴 조정 제안 및 정체기 극복 프로그램을 추천하는 AI 기능을 개발합니다.
+# Details:
+사용자의 최근 볼륨, 빈도, 강도를 분석하여 구체적인 조언을 생성하는 로직을 구현합니다. 최소한의 데이터가 쌓여야 기능이 활성화되도록 처리합니다.
+
+# Test Strategy:
+다양한 가상 사용자 데이터 시나리오에 대한 AI 추천 로직을 테스트합니다. 추천 내용의 타당성을 검토하고, 데이터가 부족할 경우의 예외 처리를 확인합니다.
+
+# Subtasks:
+## 1. Rule-based recommendation engine (MVP) [done]
+### Dependencies: None
+### Description: Compute recent metrics (volume, frequency, PR trend) for days window; produce actionable suggestions with reasons. Gate activation on min data.
+### Details:
+- Implement in backend/services/coach_service.py
+- read workouts via storage.read_json('workouts')
+- Metrics (default 30 days):
+  - weeklyVolumeKg: sum(weight_kg*reps) grouped by ISO week
+  - weeklyFrequency: distinct workout days per week
+  - prTrendPerExercise: Epley 1RM max per date, compute slope
+- Rules (examples):
+  - If weeklyFrequency<2 -> recommend +1 day/wk
+  - If volume stagnant (>3 weeks within ±10%) -> suggest progressive overload 5-10%
+  - If PR trend flat for target compound lifts -> suggest deload week or rep-range shift
+  - If sudden 50%+ volume spike -> caution for recovery
+- Activation: require at least 6 workouts in range; else insufficientData=true
+- Return shape: { insufficientData, metrics, recommendations:[{title,reason,action,priority}] }
+<info added on 2025-08-08T01:21:22.536Z>
+The core recommendation engine (MVP from subtask 8.1) has been implemented and is ready to be exposed. The API endpoint should wrap the service located in `backend/services/coach_service.py`.
+
+**Service Specification:**
+- **Metrics (default 30 days):**
+  - `weeklyVolume`: Sum of (weight_kg * reps) per ISO week.
+  - `weeklyFrequency`: Count of distinct workout days per week.
+  - `prTrend`: Percentage change of the best Epley 1RM over the time window.
+- **Rules Implemented:**
+  - **Low Frequency (High Priority):** Avg days/week < 2 → recommend adding 1 day/wk.
+  - **Stagnant Volume (Medium Priority):** Recent weekly volume within a ~15% band → suggest 5–10% progressive overload.
+  - **Volume Spike (Medium Priority):** Last week's volume ≥ 150% of previous week → caution about recovery.
+  - **PR Plateau (Low Priority):** Absolute 1RM change ≤ 2% → suggest deload or rep-range change.
+- **Activation:** Returns an `insufficientData` flag if workout count is < 6, but recommendations are always computed for the UI to handle.
+- **Performance:** The service layer is cached with a 60-second TTL.
+- **Verification:** All 27/27 tests, including scenario tests, have passed.
+</info added on 2025-08-08T01:21:22.536Z>
+
+## 2. Public API endpoint for recommendations [done]
+### Dependencies: None
+### Description: Add GET /api/coach/recommendations?days=30 returning metrics and recommendations.
+### Details:
+- Implement in backend/main.py
+- Query coach_service.recommend(days)
+- Return JSON with fields: insufficientData, metrics, recommendations[]
+- Validate days within [7,180]
+<info added on 2025-08-08T01:21:53.685Z>
+[
+  7,
+  180
+]
+</info added on 2025-08-08T01:21:53.685Z>
+
+## 3. Unit tests for AI Coach scenarios [done]
+### Dependencies: None
+### Description: Cover insufficient data, low frequency, stagnant volume, spike caution, flat PR trend.
+### Details:
+- Add backend/test_coach_recommendations.py
+- Use temp storage.DATA_DIR and seed workouts.json per case
+- Assert recommendation titles/keys present
+<info added on 2025-08-08T01:22:07.361Z>
+`backend/test_coach_recommendations.py`에 AI 코치 시나리오별 단위 테스트를 추가했습니다. 각 테스트는 임시 저장 공간과 시나리오별 `workouts.json` 데이터를 사용하여 독립적으로 실행됩니다. 데이터 부족, 낮은 빈도 및 볼륨 정체, 볼륨 급증 경고, PR 정체 등 주요 추천 경로를 모두 검증하며, 총 27개 테스트가 모두 통과되었습니다.
+</info added on 2025-08-08T01:22:07.361Z>
+
+## 4. Docs & thresholds [done]
+### Dependencies: None
+### Description: Document rules, thresholds, and future per-user plan.
+### Details:
+- Update task details with rationale and next steps for personalization
+- Note future: per-user scoping once workouts carry user_id
+<info added on 2025-08-08T01:22:18.870Z>
+Documented rules, thresholds, and future work.
+
+- Thresholds:
+  - Low frequency: avg < 2 days/week
+  - Stagnant volume band: ~±15% over recent weeks
+  - Spike caution: last ≥ 150% of previous week
+  - PR plateau: |Δ1RM| ≤ 2%
+- Data window: configurable via `days` (default 30)
+- Activation: `insufficientData` when < 6 workouts (recommendations still computed; UI may gate)
+- Future: migrate workouts to per-user schema and personalize recommendations (user_id), add per-exercise-specific rules.
+</info added on 2025-08-08T01:22:18.870Z>
+
+## 5. Optional caching for recommendations [done]
+### Dependencies: None
+### Description: Introduce simple in-memory cache with 60s TTL to avoid recomputation.
+### Details:
+- Implement in coach_service with key by days
+- Skip if complexity unnecessary
+<info added on 2025-08-08T01:22:28.399Z>
+Implemented simple in-memory caching.
+
+- TTL: 60 seconds
+- Cache key: tuple `(days, storage.DATA_DIR)` to isolate per test/data directory
+- Safe fallbacks on cache errors
+
+Note: Can be replaced with more robust caching later.
+</info added on 2025-08-08T01:22:28.399Z>
+
+## 6. Frontend service stub [done]
+### Dependencies: None
+### Description: Add getCoachRecommendations(days) to frontend/src/services/api.js.
+### Details:
+- Basic wrapper around GET /api/coach/recommendations
+- No UI components yet
+<info added on 2025-08-08T01:22:47.695Z>
+Frontend API stub added in `frontend/src/services/api.js`. The new `getCoachRecommendations(days)` function calls `GET /api/coach/recommendations?days=`. No UI changes were made.
+</info added on 2025-08-08T01:22:47.695Z>
+
